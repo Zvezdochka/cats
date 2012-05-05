@@ -1,0 +1,120 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> 
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"> 
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/dojo/1.7.1/dijit/themes/claro/claro.css"> <!-- style before to avoid any flash of unstyled content -->
+	<script src="http://ajax.googleapis.com/ajax/libs/dojo/1.7.2/dojo/dojo.js" data-dojo-config="async: true"></script>
+  
+    <link href="style.css" type="text/css" rel="stylesheet" />    
+
+    <script type="text/javascript" src="http://mbostock.github.com/d3/d3.v2.js?2.9.1"></script> 
+  </head> 
+
+    <body class="claro"> 
+        <div id="wrapper">
+        
+            <div id="container">
+        
+                <div id="content">
+                    <div id="text">
+                        text
+                    </div><!-- eo #text -->
+                </div><!-- eo #content -->
+        
+                <div id="left">
+                    <embed id="emb" src="cat.svg" width="100%" height="100%" type="image/svg+xml" />
+                </div>
+            
+                <div id="right">
+                    <div id="right_hat"></div>
+                    <div id="right_window"></div>
+                    <div id="right_content">
+                        <div class="task">
+                            <input id="taskText"><button id="makeTodo"></button>        
+                        </div>
+                        <div class="todoList">
+                            <p><div class="taskText"></div><button class="done"></button></p>   
+                        </div>                    
+                    </div>
+                    <div id="right_hat"></div>
+                </div><!-- end #right -->
+      
+                <div class="clear"></div>
+            </div><!-- end #container -->
+        </div><!-- end #wrapper -->
+        <div id="footer">FOOTER</div>
+
+	<script>
+	// fetches the document for the given embedding_element
+	function getSubDocument(embedding_element)
+	{
+		if (embedding_element.contentDocument) 
+		{
+			return embedding_element.contentDocument;
+		} 
+		else 
+		{
+			var subdoc = null;
+			try {
+				subdoc = embedding_element.getSVGDocument();
+			} catch(e) {}
+			return subdoc;
+		}
+	}
+	
+	function findSVGElement()
+	{
+//		require(["dojo/dom", "dojo/domReady!"], function(dom){		
+			var obj = document.getElementById("emb"); 
+			console.info(obj);
+			//var svg = obj[0].getSVGDocument();
+			//console.info(svg);
+			var subDoc = getSubDocument(obj);
+			console.info(subDoc);
+			var cats = d3.select(subDoc)
+						 .selectAll(".cat")
+						 .data(['Shreda', 'Masik'])
+						 .transition()
+						 	.delay(function(d, i) { return d3.random.normal(500, 500)(); })
+						 	.duration(3000)
+				   			.attr('transform', 'translate(0, 250)');
+			console.info(cats);
+	 	// })
+	}
+
+	// wait until all the resources are loaded
+	window.addEventListener("load", findSVGElement, false);
+
+	function makeTodo(taskText)
+	{
+		// erase taskText
+		require(["dojo/dom-construct"], function(domConstruct){
+            // add p to todoList
+            var p = domConstruct.create("p", null, dojo.byId("todoList"), last);
+            var taskDiv = domConstruct.create("div", {class: "taskText", innerHTML:taskText}, p, last);
+            // add button done
+            var doneButton = domConstruct.create("button", {class: "done"}, p, last);
+								
+        });
+	}
+	
+	require(["dijit/form/Button", "dijit/form/TextBox", "dojo/domReady!"], function(Button, TextBox) 
+	{
+	    var taskTextTextbox = new TextBox({
+            placeHolder: "Enter your task or question here."
+        }, "taskText");
+	    
+	    taskTextTextbox.startup();
+        
+		var makeTodoButton = new Button({
+            iconClass:"dijitIconNewTask",
+            showLabel:false,
+            label: "To Do!",
+            onClick: function(){ console.log("makeTodo"); makeTodo(dojo.byId("taskText").text);}
+        }, "makeTodo");
+         
+        makeTodoButton.startup();
+    });
+    </script>    
+  </body>
+</html>
