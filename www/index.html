@@ -1,92 +1,199 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <head> 
+<head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"> 
-<!-- 	<script src="http://ajax.googleapis.com/ajax/libs/dojo/1.7.2/dojo/dojo.js" data-dojo-config="async: true"></script> -->
+    <!--<script src="http://ajax.googleapis.com/ajax/libs/dojo/1.7.2/dojo/dojo.js" data-dojo-config="async: true"></script> -->
   
-<!--    <link href="style.css" type="text/css" rel="stylesheet" />    -->
+    <!--<link href="style.css" type="text/css" rel="stylesheet" />-->
+    <script type="text/javascript" src="http://mbostock.github.com/d3/d3.v2.js?2.9.1"></script>
+</head>
 
-    <script type="text/javascript" src="http://mbostock.github.com/d3/d3.v2.js?2.9.1"></script> 
-  </head> 
-
-    <body> 
-        <div>  
-            <embed id="emb" src="shreda.svg" width="100%" height="100%" type="image/svg+xml" />
-        </div>
-        <div>
-            <embed id="slider_wind" src="slider.svg" width="100%" height="100%" type="image/svg+xml" /><br>
-            <embed id="slider_gravity" src="slider.svg" width="100%" height="100%" type="image/svg+xml" />
-        </div>
-	<script>
-	// fetches the document for the given embedding_element
-	function getSubDocument(embedding_element)
-	{
-		if (embedding_element.contentDocument) 
-		{
-			return embedding_element.contentDocument;
-		} 
-		else 
-		{
-			var subdoc = null;
-			try {
-				subdoc = embedding_element.getSVGDocument();
-			} catch(e) {}
-			return subdoc;
-		}
-	}
-	
-    var catNames = [];
-    var canvas;
-     
-    function redraw()
-    {
-        var cats = canvas.selectAll('.cat')
-                         .data(catNames)
-                         .enter()
-                             .append('use')
-                             .attr('xlink:href', '#shreda')      
-                             .attr('x', function(d, i){return i*200})
-                             .attr('y', 0)
-                             .style('opacity','0')
-                             .classed('cat', true)
-                         .transition()
-                             .duration(3000)
-                             .style('opacity', '1') 
-                             .each('end', function() {
-                                  d3.select(this)
-                                    .transition()
-                                        //.delay(function(d, i) { return d3.random.normal(500, 500)(); })
-                                        .duration(3000)
-                                        .attr('transform', 'translate(0, 250)');
-                             });
-    }
-
-	function findSVG(embed_id)
-	{
-		var obj = document.getElementById(embed_id); 
-        var subDoc = getSubDocument(obj);
-        var svg = d3.select(subDoc).select('svg');
-        return svg;
-	}
-	
-    function init()
-	{
-			canvas = findSVG('emb');
-			console.info(canvas);
-			//var sliderWind = findSVG('slider_wind');
-			//var sliderGravity = findSVG('slider_gravity');
-
-            canvas.on('click',function()
+<body> 
+    <div>  
+        <embed id="emb" src="shreda.svg" type="image/svg+xml" />
+    </div>
+    <div>
+        <embed id="slider_wind" src="slider.svg" type="image/svg+xml" /><br /><br />
+        <embed id="slider_gravity" src="slider.svg" type="image/svg+xml" />
+    </div>
+    
+    <script>
+        // fetches the document for the given embedding_element
+        function getSubDocument(embedding_element)
+        {
+            if (embedding_element.contentDocument) 
             {
-                console.info('ttt');
+                return embedding_element.contentDocument;
+            } 
+            else 
+            {
+                var subdoc = null;
+                try {
+                    subdoc = embedding_element.getSVGDocument();
+                } catch(e) {}
+                return subdoc;
+            }
+        }
+        
+        var canvas,
+            catNames = [];
+            wind = 0,
+            gravity = 1;
+         
+        function redraw()
+        {
+            var height = 250;
+            var time = Math.sqrt(2 * height / gravity);
+            console.info('Time', time);
+            
+            var cats = canvas.selectAll('.cat')
+                             .data(catNames)
+                             .enter()
+                                 .append('use')
+                                 .attr('xlink:href', '#shreda')      
+                                 .attr('x', function(d, i) { return i * 200; })
+                                 .attr('y', 0)
+                                 .style('opacity','0')
+                                 .classed('cat', true)
+                             .transition()
+                                 .duration(1500)
+                                 .style('opacity', '1') 
+                                 .each('end', function() {
+                                      d3.select(this)
+                                        .transition()
+                                            //.delay(function(d, i) { return d3.random.normal(500, 500)(); })
+                                            .duration(time * 1000)
+                                            .attr('transform', 'translate(' + wind + ', 250)');
+                                 });
+        }
+
+        function findSVG(embed_id)
+        {
+            var obj = document.getElementById(embed_id); 
+            var subDoc = getSubDocument(obj);
+            var svg = d3.select(subDoc).select('svg');
+            return svg;
+        }
+        
+        var Slider = function(id, canvas, on_pos) {
+            var self = this;
+            
+            self.id = id;
+            self.canvas = canvas;
+            self.on_pos = on_pos;
+            self.pointer = null;
+            self.stripe = null;
+            self.pos = 0;
+            self.max_pos = null;
+            self.capture = false;
+            self.last_event = null;
+            
+            self.__init__ = function() {
+                var pointer = self.canvas.select('#pointer');
+                var stripe = self.canvas.select('#stripe');
+                
+                var bbox = stripe.node().getBBox();
+                self.max_pos = bbox.width - 3;
+                //console.info('Max pos', self.max_pos);
+            
+                pointer.on('mousedown', self.on_mousedown);
+                            
+                /* 
+                 * Устанавливаем обработчик движения мышки сразу на весь холст, 
+                 * потому что если поставить его на указатель, то при быстром 
+                 * движении мышки, она может выйти за границы указателя и 
+                 * дальнейшие уведомления о движении приходить не будут.
+                 */
+                self.canvas.on('mousemove', self.on_mousemove)
+                           .on('mouseup', self.on_mouseup);
+                
+                self.pointer = pointer;
+                self.stripe = stripe;
+            };
+            
+            self.on_mousedown = function() {
+                //console.info('Slider', self.id, 'mousedown');
+                
+                self.capture = true;
+                self.last_event = d3.event; 
+            };
+            
+            self.on_mousemove = function() {
+                if (!self.capture) {
+                    return;
+                }
+                
+                var e = d3.event,
+                    last_e = self.last_event;
+                    
+                /* Игнорируем фантомные события, без реального смещения мышки */
+                if (last_e != null && e.x == last_e.x && e.y == last_e.y) {
+                    return;
+                }
+                
+                //console.info('Slider', self.id, 'mousemove');
+                self.last_event = e;
+                
+                var shift = e.x - last_e.x,
+                    pos = self.pos,
+                    percent;
+                
+                //console.info('Pos', pos);
+                //console.info('Shift', shift);
+                
+                if (pos + shift < 0 || pos + shift > self.max_pos) {
+                    return;
+                }
+                
+                pos += shift;
+                self.pos = pos;
+                percent = Math.round(self.pos / self.max_pos * 100);
+                self.on_pos(percent);
+                
+                self.pointer.attr('transform', 'translate(' + pos + ', 0)');
+            };
+            
+            self.on_mouseup = function() {
+                //console.info('Slider', self.id, 'mouseup');                                             
+                
+                if (!self.capture) {
+                    return;
+                }
+                           
+                self.capture = false;
+                self.last_event = false;
+            };
+            
+            self.__init__();
+        };
+        
+        function init()
+        {
+            canvas = findSVG('emb');
+            console.info(canvas);
+            var svgWind = findSVG('slider_wind');
+            var svgGravity = findSVG('slider_gravity');
+
+            canvas.on('click', function()
+            {
+                console.info('ttt'); 
                 catNames.push('shreda');
                 console.info(catNames);
                 redraw();
-            })            
-	}                                   
-	// wait until all the resources are loaded
-	window.addEventListener("load", init, false);
-
+            });
+            
+            var windSlider = new Slider('wind', svgWind, function(value) {
+                wind = value * 1.5;
+                console.info('Wind', wind);
+            });
+            
+            var gravitySlider = new Slider('gravity', svgGravity, function(value) {
+                gravity = (value == 0 ? 1 : value);
+                console.info('Gravity', gravity);
+            });
+        }                                   
+        // wait until all the resources are loaded
+        window.addEventListener("load", init, false);
     </script>    
   </body>
 </html>
