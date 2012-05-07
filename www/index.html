@@ -10,14 +10,20 @@
   </head> 
 
     <body> 
-        <div>  
+        <div style="float: left; width: 2500px; margin-right: -400px; height: 100%;">  
             <embed id="emb" src="shreda.svg" width="100%" height="100%" type="image/svg+xml" />
         </div>
-        <div>
-            <embed id="slider_wind" src="slider.svg" width="100%" height="100%" type="image/svg+xml" /><br>
-            <embed id="slider_gravity" src="slider.svg" width="100%" height="100%" type="image/svg+xml" />
+        <div style="float: left; width: 400px; height: 100%;">
+            <embed id="slider_wind" width="100%"  src="slider.svg" type="image/svg+xml" /><br>
+            <embed id="slider_gravity" width="100%" src="slider.svg" type="image/svg+xml" />
         </div>
 	<script>
+    var catNames = [];
+    var canvas;
+    var windOffset = 0;
+    var pos = 0;
+    var gravity = 0;
+    
 	// fetches the document for the given embedding_element
 	function getSubDocument(embedding_element)
 	{
@@ -28,16 +34,14 @@
 		else 
 		{
 			var subdoc = null;
-			try {
+			try 
+			{
 				subdoc = embedding_element.getSVGDocument();
 			} catch(e) {}
 			return subdoc;
 		}
 	}
 	
-    var catNames = [];
-    var canvas;
-     
     function redraw()
     {
         var cats = canvas.selectAll('.cat')
@@ -56,8 +60,8 @@
                                   d3.select(this)
                                     .transition()
                                         //.delay(function(d, i) { return d3.random.normal(500, 500)(); })
-                                        .duration(3000)
-                                        .attr('transform', 'translate(0, 250)');
+                                        .duration(250 / (gravity+1) *10)  
+                                        .attr('transform', 'translate(' + windOffset + ', 250)');
                              });
     }
 
@@ -69,18 +73,57 @@
         return svg;
 	}
 	
-    function init()
+	function initSlider(sliderObj, on_pos)
+	{
+		var pos = 0;
+		var pointerObj = sliderObj.select("#pointer");
+		var stripe = sliderObj.select("#stripe");
+		var stripeLength = stripe.node().getBBox().width;
+
+		pointerObj.on('mousedown', function()
+		{
+			var lastX = d3.event.x;
+			sliderObj.on('mousemove', function()
+			{
+				var moveOffset = d3.event.x - lastX;  
+				if (((pos + moveOffset) > stripeLength) || (pos + moveOffset < 0))
+				{
+					return ;	
+				}
+				pos += moveOffset;
+				lastX = d3.event.x;
+				pointerObj.attr('transform', 'translate('+ pos +', 0)');
+				
+				var newPos = Math.round(pos / stripeLength * 100);  
+				on_pos(newPos);
+			})
+			sliderObj.on('mouseup', function()
+			{
+				sliderObj.on('mousemove', null);
+			});
+		})
+	}
+	
+	function init()
 	{
 			canvas = findSVG('emb');
-			console.info(canvas);
-			//var sliderWind = findSVG('slider_wind');
-			//var sliderGravity = findSVG('slider_gravity');
 
+			// wind
+			var sliderWind = findSVG('slider_wind');
+			initSlider(sliderWind, function(new_pos) {
+				windOffset = new_pos * 1.5;
+			});
+			
+			// gravity
+			var sliderGravity = findSVG('slider_gravity');
+			initSlider(sliderGravity, function(new_pos)
+			{
+				gravity = new_pos;
+			});
+			
             canvas.on('click',function()
             {
-                console.info('ttt');
                 catNames.push('shreda');
-                console.info(catNames);
                 redraw();
             })            
 	}                                   
