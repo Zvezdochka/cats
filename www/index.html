@@ -19,12 +19,62 @@
         </div>
 	<script>
     var catNames = [];
+    var cats = [];
     var canvas;
     var windOffset = 0;
     var pos = 0;
     var gravity = 0;
-    
-	// fetches the document for the given embedding_element
+
+	var Cat = function(name, catNode, canvas)
+	{
+		var that = this;
+		that.catName = name;
+		that.lastX = null;
+		that.lastY = null;
+		that.pos = {x: 0, y: 0};
+		that.catNode = catNode;
+		
+	    that.construct = function() 
+	    {
+			catNode.on('mousedown', that.catchCat);
+	    }
+	    
+	    that.catchCat = function() 
+	    {
+	    	canvas.on('mousemove', that.moveCat);
+	    	canvas.on('mouseup', that.releaseCat);
+	    	that.lastX = d3.event.x;
+	    	that.lastY = d3.event.y;
+	    	that.pos.x = that.catNode.attr('x')*1;
+	    	that.pos.y = that.catNode.attr('y')*1;
+	    	
+	    	console.info('initialPos',that.pos);
+	    	console.info('catNodeAtr',that.catNode);
+	    }
+	    
+	    that.moveCat = function()
+	    {
+	    	var offsetX = d3.event.x - that.lastX;
+	    	that.lastX = d3.event.x;
+	    	
+	    	var offsetY = d3.event.y - that.lastY;
+	    	that.lastY = d3.event.y;
+	    	
+	    	that.pos.x += offsetX;
+	    	that.pos.y += offsetY;
+	    	that.catNode.attr('x', that.pos.x);
+	    	that.catNode.attr('y', that.pos.y);
+	    }
+	    
+	    that.releaseCat = function()
+	    {
+	    	canvas.on('mousemove', null);
+	    }
+	    
+	    that.construct();
+	}
+	
+    // fetches the document for the given embedding_element
 	function getSubDocument(embedding_element)
 	{
 		if (embedding_element.contentDocument) 
@@ -53,6 +103,7 @@
                              .attr('y', 0)
                              .style('opacity','0')
                              .classed('cat', true)
+                             .call(initCats)
                          .transition()
                              .duration(3000)
                              .style('opacity', '1') 
@@ -71,6 +122,14 @@
         var subDoc = getSubDocument(obj);
         var svg = d3.select(subDoc).select('svg');
         return svg;
+	}
+
+	function initCats(catsSelection)
+	{
+		catsSelection.each(function(name)
+		{
+			cats.push(new Cat(name, d3.select(this), canvas));
+		})
 	}
 	
 	function initSlider(sliderObj, on_pos)
@@ -123,7 +182,7 @@
 			
             canvas.on('click',function()
             {
-                catNames.push('shreda');
+            	catNames.push('shreda');
                 redraw();
             })            
 	}                                   
