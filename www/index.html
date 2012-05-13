@@ -33,13 +33,35 @@
 		that.lastY = null;
 		that.pos = {x: 0, y: 0};
 		that.catNode = catNode;
+        that.canvas = canvas;
 		
 	    that.construct = function() 
 	    {
 			catNode.on('mousedown', that.catchCat);
+            catNode.on('mouseover', that.catPreselect);
 	    }
+        
 	    
-	    that.catchCat = function() 
+	    that.catPreselect = function()
+        {
+            var catBoundBox = that.catNode.node().getBBox();
+            var centre = 
+            {
+                'x': that.catNode.attr('x')*1 + catBoundBox.width / 2, 
+                'y': that.catNode.attr('y')*1 + catBoundBox.height / 2 
+            };
+            
+            var catMatrix = that.catNode.node().getScreenCTM();
+            console.info(catMatrix);
+            canvas.append('circle')
+                  .attr('cx', centre.x)
+                  .attr('cy', centre.y)
+                  .attr('r', d3.max([catBoundBox.width, catBoundBox.height]) / 2 + 20)
+                  .classed('pre', true)
+                  .classed('selector', true);
+        }
+        
+        that.catchCat = function() 
 	    {
 	    	canvas.on('mousemove', that.moveCat);
 	    	canvas.on('mouseup', that.releaseCat);
