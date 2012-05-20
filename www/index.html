@@ -220,8 +220,11 @@
 			
             canvas.on('click',function()
             {
-            	catNames.push('shreda');
-                redraw();
+				if (d3.event.target == canvas.node())
+				{
+	            	catNames.push('shreda');
+	                redraw();
+				}
             })            
 	}                                   
 	// wait until all the resources are loaded
