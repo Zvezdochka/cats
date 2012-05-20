@@ -1,0 +1,9 @@
+@CHARSET "UTF-8";
+
+.selector
+{
+	fill : #ffff00;
+	fill-opacity : 0.05;
+	stroke-dasharray : 3,4;
+	stroke : #eeaa00; 
+}
