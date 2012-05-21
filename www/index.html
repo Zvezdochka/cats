@@ -40,7 +40,6 @@
 	    {
 			catNode.on('mousedown', that.catchCat);
             catNode.on('mouseover', that.catPreselect);
-            catNode.on('mouseout', that.catDeselect);            
 	    }
         
 	    
@@ -54,13 +53,15 @@
             var catMatrix = that.catNode.node().getScreenCTM();
             centre = centre.matrixTransform(catMatrix);
             
-            that.selectionMarker = canvas.select('#markers')
-            	  .append('circle')
-                  .attr('cx', centre.x)
-                  .attr('cy', centre.y)
-                  .attr('r', d3.max([catBoundBox.width, catBoundBox.height]) / 2 + 20)
+            var selectorBoundBox = canvas.select('#selector').node().getBBox();
+            that.selectionMarker = canvas.select('#markerGroup')
+            	  .append('use')
+            	  .attr('xlink:href', '#selector')    
+                  .attr('x', centre.x - selectorBoundBox.width / 2)
+                  .attr('y', centre.y - selectorBoundBox.height / 2)
                   .classed('pre', true)
                   .classed('selector', true);
+            that.selectionMarker.on('mouseout', that.catDeselect);
         }
 	    
 	    that.catDeselect = function()
@@ -129,7 +130,7 @@
 	
     function redraw()
     {
-        var cats = canvas.select('#cats')
+        var cats = canvas.select('#catGroup')
         				 .selectAll('.cat')
                          .data(catNames)
                          .enter()
@@ -202,8 +203,8 @@
 	function init()
 	{
 			canvas = findSVG('emb');
-			canvas.append('g').attr('id','markers');
-			canvas.append('g').attr('id','cats');
+			canvas.append('g').attr('id','markerGroup');
+			canvas.append('g').attr('id','catGroup');
 
 			// wind
 			var sliderWind = findSVG('slider_wind');
