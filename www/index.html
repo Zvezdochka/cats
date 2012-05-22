@@ -24,8 +24,38 @@
     var windOffset = 0;
     var pos = 0;
     var gravity = 0;
+	var catSelector = null;
+	
+	var CatSelector = function(selectorGroupId, canvas)
+	{
+		var that = this;
+		that.canvas = canvas; 
+		that.selector = null;
+		that.buttons = {rotate: null};
+		
+		that.construct = function()
+		{
+			that.selector = that.canvas.select('#' + selectorGroupId);
+			that.buttons.rotate = that.selector.select('#buttonRotate');
+			that.buttons.rotate.on('mousedown', that.buttonRotatePress);
+			that.buttons.rotate.on('mouseup', that.buttonRotateRelease);
+		}
+		
+		that.buttonRotatePress = function()
+		{
+			console.info("event",d3.event);
+			console.info("mouseDown");
+		}
 
-	var Cat = function(name, catNode, canvas)
+		that.buttonRotateRelease = function()
+		{
+			console.info("mouseUp");
+		}
+		
+		that.construct();
+	}
+	
+    var Cat = function(name, catNode, canvas)
 	{
 		var that = this;
 		that.catName = name;
@@ -61,6 +91,7 @@
                   .attr('y', centre.y - selectorBoundBox.height / 2)
                   .classed('pre', true)
                   .classed('selector', true);
+            //that.selectionMarker.bind('cat', this);
             that.selectionMarker.on('mouseout', that.catDeselect);
         }
 	    
@@ -226,7 +257,10 @@
 	            	catNames.push('shreda');
 	                redraw();
 				}
-            })            
+            })     
+            
+            /*create instance of selector*/
+            catSelector = new CatSelector('selector', canvas);
 	}                                   
 	// wait until all the resources are loaded
 	window.addEventListener("load", init, false);
