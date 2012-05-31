@@ -43,6 +43,9 @@
 		
 		that.buttonRotatePress = function()
 		{
+            var cat = d3.event.target.correspondingUseElement.cat;
+            cat.rotate(10);
+            
 			console.info("event",d3.event);
 			console.info("mouseDown");
 		}
@@ -75,14 +78,7 @@
 	    
 	    that.catPreselect = function()
         {
-            var catBoundBox = that.catNode.node().getBBox();
-            var centre = canvas.node().createSVGPoint(); 
-            centre.x = that.catNode.attr('x')*1 + catBoundBox.width / 2; 
-            centre.y = that.catNode.attr('y')*1 + catBoundBox.height / 2; 
-            
-            var catMatrix = that.catNode.node().getScreenCTM();
-            centre = centre.matrixTransform(catMatrix);
-            
+            var centre = that.centre(true); 
             var selectorBoundBox = canvas.select('#selector').node().getBBox();
             that.selectionMarker = canvas.select('#markerGroup')
             	  .append('use')
@@ -91,10 +87,43 @@
                   .attr('y', centre.y - selectorBoundBox.height / 2)
                   .classed('pre', true)
                   .classed('selector', true);
-            //that.selectionMarker.bind('cat', this);
+                  
+            that.selectionMarker.node().cat = that;
             that.selectionMarker.on('mouseout', that.catDeselect);
         }
 	    
+        that.centre = function(screenCoords) {
+            screenCoords = (screenCoords ? true : false);
+            
+            var catBoundBox = that.catNode.node().getBBox();
+            var centre = canvas.node().createSVGPoint(); 
+            centre.x = that.catNode.attr('x')*1 + catBoundBox.width / 2; 
+            centre.y = that.catNode.attr('y')*1 + catBoundBox.height / 2; 
+            
+            if (screenCoords) 
+            {
+                var catMatrix = that.catNode.node().getScreenCTM();
+                centre = centre.matrixTransform(catMatrix);
+            }
+            
+            return centre;
+        }
+        
+        that.rotate = function(angle) {
+            var cat = that.catNode.node();
+            var parent = cat.parentNode;
+            var matrix = cat.getTransformToElement(parent);
+            //console.info('Transform matrix', matrix);
+            
+            var centre = that.centre();
+            matrix = matrix.translate(centre.x, centre.y);
+            matrix = matrix.rotate(angle);             
+            matrix = matrix.translate(-centre.x, -centre.y);
+            
+            var m = (m = matrix, [m.a, m.b, m.c, m.d, m.e, m.f]);
+            that.catNode.attr('transform', 'matrix(' + m.join(', ') + ')');
+        }
+        
 	    that.catDeselect = function()
 	    {
 	    	that.selectionMarker.remove();
