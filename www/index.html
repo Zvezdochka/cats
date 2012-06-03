@@ -43,8 +43,9 @@
 		
 		that.buttonRotatePress = function()
 		{
-			console.info("event",d3.event);
-			console.info("mouseDown");
+            var domCat = d3.event.target.correspondingUseElement.cat;
+            domCat.rotate(10);
+            
 		}
 
 		that.buttonRotateRelease = function()
@@ -65,79 +66,97 @@
 		that.catNode = catNode;
         that.canvas = canvas;
 		that.selectionMarker = null;
-		
+		that.events = 
+        {
+            'catPreselect' : function()
+            {
+                var centre = that.getCentre();
+                var catMatrix = that.catNode.node().getScreenCTM();
+                centre = centre.matrixTransform(catMatrix);
+                
+                var selectorBoundBox = canvas.select('#selector').node().getBBox();
+                that.selectionMarker = canvas.select('#markerGroup')
+                      .append('use')
+                      .attr('xlink:href', '#selector')    
+                      .attr('x', centre.x - selectorBoundBox.width / 2)
+                      .attr('y', centre.y - selectorBoundBox.height / 2)
+                      .classed('pre', true)
+                      .classed('selector', true);
+                //that.selectionMarker.bind('cat', this);
+                that.selectionMarker.node().cat = that;
+                that.selectionMarker.on('mouseout', that.events.catDeselect);
+            },
+            
+            'catDeselect' : function()
+            {
+                that.selectionMarker.remove();
+                that.selectionMarker = null;
+            },
+            
+            'catchCat' : function() 
+            {
+                canvas.on('mousemove', that.events.moveCat);
+                canvas.on('mouseup', that.events.releaseCat);
+                that.lastX = d3.event.x;
+                that.lastY = d3.event.y;
+                that.pos.x = that.catNode.attr('x')*1;
+                that.pos.y = that.catNode.attr('y')*1;
+                
+                console.info('initialPos',that.pos);
+                console.info('catNodeAtr',that.catNode);
+            },
+            
+            'moveCat' : function()
+            {
+                var offsetX = d3.event.x - that.lastX;
+                that.lastX = d3.event.x;
+                
+                var offsetY = d3.event.y - that.lastY;
+                that.lastY = d3.event.y;
+                
+                that.pos.x += offsetX;
+                that.pos.y += offsetY;
+                that.catNode.attr('x', that.pos.x);
+                that.catNode.attr('y', that.pos.y);
+                if (that.selectionMarker) 
+                {
+                    that.selectionMarker.attr('cx', that.selectionMarker.attr('cx')*1 + offsetX);
+                    that.selectionMarker.attr('cy', that.selectionMarker.attr('cy')*1 + offsetY);
+                }
+            },
+            
+            'releaseCat' : function()
+            {
+                canvas.on('mousemove', null);
+            }
+        }
+
 	    that.construct = function() 
 	    {
-			catNode.on('mousedown', that.catchCat);
-            catNode.on('mouseover', that.catPreselect);
+			catNode.on('mousedown', that.events.catchCat);
+            catNode.on('mouseover', that.events.catPreselect);
 	    }
         
-	    
-	    that.catPreselect = function()
+        that.getCentre = function()
         {
             var catBoundBox = that.catNode.node().getBBox();
             var centre = canvas.node().createSVGPoint(); 
             centre.x = that.catNode.attr('x')*1 + catBoundBox.width / 2; 
             centre.y = that.catNode.attr('y')*1 + catBoundBox.height / 2; 
-            
-            var catMatrix = that.catNode.node().getScreenCTM();
-            centre = centre.matrixTransform(catMatrix);
-            
-            var selectorBoundBox = canvas.select('#selector').node().getBBox();
-            that.selectionMarker = canvas.select('#markerGroup')
-            	  .append('use')
-            	  .attr('xlink:href', '#selector')    
-                  .attr('x', centre.x - selectorBoundBox.width / 2)
-                  .attr('y', centre.y - selectorBoundBox.height / 2)
-                  .classed('pre', true)
-                  .classed('selector', true);
-            //that.selectionMarker.bind('cat', this);
-            that.selectionMarker.on('mouseout', that.catDeselect);
+            return centre;
         }
-	    
-	    that.catDeselect = function()
-	    {
-	    	that.selectionMarker.remove();
-	    	that.selectionMarker = null;
-	    }
+        	    
+	    that.rotate = function(angle)
+        {
+            var domCat = that.catNode.node();           
+            var matrixTransformGroupToCat = domCat.getTransformToElement(domCat.parentNode);
+            matrixTransformGroupToCat = matrixTransformGroupToCat.translate(that.getCentre().x, that.getCentre().y);
+            matrixTransformGroupToCat = matrixTransformGroupToCat.rotate(angle);                            
+            matrixTransformGroupToCat = matrixTransformGroupToCat.translate(-that.getCentre().x, -that.getCentre().y);
+            var m = (m = matrixTransformGroupToCat, [m.a, m.b, m.c, m.d, m.e, m.f].join(' '));
+            that.catNode.attr('transform', 'matrix('+m+')');
+        }
         
-        that.catchCat = function() 
-	    {
-	    	canvas.on('mousemove', that.moveCat);
-	    	canvas.on('mouseup', that.releaseCat);
-	    	that.lastX = d3.event.x;
-	    	that.lastY = d3.event.y;
-	    	that.pos.x = that.catNode.attr('x')*1;
-	    	that.pos.y = that.catNode.attr('y')*1;
-	    	
-	    	console.info('initialPos',that.pos);
-	    	console.info('catNodeAtr',that.catNode);
-	    }
-	    
-	    that.moveCat = function()
-	    {
-	    	var offsetX = d3.event.x - that.lastX;
-	    	that.lastX = d3.event.x;
-	    	
-	    	var offsetY = d3.event.y - that.lastY;
-	    	that.lastY = d3.event.y;
-	    	
-	    	that.pos.x += offsetX;
-	    	that.pos.y += offsetY;
-	    	that.catNode.attr('x', that.pos.x);
-	    	that.catNode.attr('y', that.pos.y);
-	    	if (that.selectionMarker) 
-	    	{
-		    	that.selectionMarker.attr('cx', that.selectionMarker.attr('cx')*1 + offsetX);
-		    	that.selectionMarker.attr('cy', that.selectionMarker.attr('cy')*1 + offsetY);
-	    	}
-	    }
-	    
-	    that.releaseCat = function()
-	    {
-	    	canvas.on('mousemove', null);
-	    }
-	    
 	    that.construct();
 	}
 	
