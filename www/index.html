@@ -32,7 +32,7 @@
 		that.canvas = canvas; 
 		that.selector = null;
 		that.buttons = {rotate: null};
-		
+
 		that.construct = function()
 		{
 			that.selector = that.canvas.select('#' + selectorGroupId);
@@ -43,9 +43,28 @@
 		
 		that.buttonRotatePress = function()
 		{
-            var domCat = d3.event.target.correspondingUseElement.cat;
-            domCat.rotate(10);
-            
+            that.canvas.on('mousemove', that.buttonRotateMove(d3.event));
+		}
+		
+		that.buttonRotateMove = function(mouseDownEvent)
+		{
+			var catObj = mouseDownEvent.target.correspondingUseElement.cat;
+
+			var selectorCentre = catObj.getCentre();
+            var catMatrix = catObj.catNode.node().getScreenCTM();
+            selectorCentre = selectorCentre.matrixTransform(catMatrix);
+			
+			console.info('centrePoint', selectorCentre);
+			console.info('startPoint', mouseDownEvent);
+			var tgStartAngle = (mouseDownEvent.x-selectorCentre.x) / (mouseDownEvent.y-selectorCentre.y); //start point and centre are not changable
+			return function() {
+				var mouseMoveEvent = d3.event;
+				console.info('finPoint', mouseMoveEvent);
+				var tgFinishAngle = (mouseMoveEvent.x-selectorCentre.x) / (mouseMoveEvent.y-selectorCentre.y);
+				var angle = Math.atan(tgStartAngle) - Math.atan(tgFinishAngle);
+				console.info(angle);
+				catObj.rotate(angle);
+			}
 		}
 
 		that.buttonRotateRelease = function()
