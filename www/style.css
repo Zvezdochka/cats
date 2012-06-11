@@ -1,0 +1,79 @@
+* {margin: 0;padding: 0; font: 14px/17px "Trebuchet MS", Tahoma, Arial}
+html, body {height: 100%;}
+* html #content {
+  height: 100%;
+}
+
+p {padding: 10px;}
+
+#header 
+{
+	height: 220px;
+	background-image: url("images/ii_01.png"); 
+	text-align: center;
+}
+#text {background: #D5FFD5;}
+#left {background: #FFF2BF;}
+#right {background: #BFF2FF;}
+#footer {
+  /* second variant (if height of content is short)
+  position: relative;
+  height: 100px; background: #FFCACA;
+  margin-top: -100px;*/
+	position: absolute; 
+	bottom: 0; 
+	left: 0; 
+	width: 100%; 
+	height: 251px; 
+	background-image: url("images/ii_03.png");
+	overflow: hidden; /*Disable scrollbars. Set to "scroll" to enable*/
+}
+
+.clear {clear: both;}
+
+/* код для разметки 3-х колонок */
+#wrapper {
+  width: 100%;
+  width: expression((documentElement.clientWidth||document.body.clientWidth)<995?'1000px':'');
+  min-width: 1000px;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 100px; /*Set bottom value to HeightOfFrameDiv*/
+	overflow: auto; 
+}
+#container 
+{
+	width: 100%;
+}
+#content 
+{
+    /*position: relative;*/
+    min-height: 100%;
+    width: 100%;
+    float: right;
+    margin-left: -1826px;
+}
+#text 
+{
+	margin: 0 1826px;/*Set left margin to (leftColumnWidth + RightColumnWidth)*/
+    padding-bottom: 100px;
+	background-image: url("images/img_06.png");
+	background-repeat: repeat-y;
+}
+#left 
+{
+	float: left;
+	width: 525px;
+	background-image: url("images/img_04.png");
+	background-repeat: repeat-y;
+}
+
+#right 
+{
+	float: left;
+	width: 1301px;
+}
+
+/* */
