@@ -38,12 +38,12 @@
 			that.selector = that.canvas.select('#' + selectorGroupId);
 			that.buttons.rotate = that.selector.select('#buttonRotate');
 			that.buttons.rotate.on('mousedown', that.buttonRotatePress);
-			that.buttons.rotate.on('mouseup', that.buttonRotateRelease);
 		}
-		
+
 		that.buttonRotatePress = function()
 		{
             that.canvas.on('mousemove', that.buttonRotateMove(d3.event));
+			that.canvas.on('mouseup', that.buttonRotateRelease);            
 		}
 
 		that.buttonRotateMove = function(mouseDownEvent)
@@ -56,20 +56,64 @@
 
             //var k1 = (mouseDownEvent.y-selectorCentre.y) / (mouseDownEvent.x-selectorCentre.x);
             var k1 = (selectorCentre.y-mouseDownEvent.y) / (mouseDownEvent.x-selectorCentre.x);
-
+            var pointPos = mouseDownEvent;
             var anglePos = 0;
+
 			return function() {
                 var angleOffset;
                 var mouseMoveEvent = d3.event;
                 var k2 = (selectorCentre.y-mouseMoveEvent.y) / (mouseMoveEvent.x-selectorCentre.x);
+                var pointRelativeRingCentre = {'x':null, 'y':null};
+                pointRelativeRingCentre.x = mouseMoveEvent.x-selectorCentre.x;
+                pointRelativeRingCentre.y = selectorCentre.y-mouseMoveEvent.y;
 
                 var tg = Math.abs((k1-k2) / (1+k1*k2));
-                console.info(tg);
                 var angle = Math.atan(tg)*180 / Math.PI; //current
                 console.info('current',angle);
                 angleOffset = Math.abs(angle - anglePos);
                 console.info('offset', angleOffset);
                 anglePos = angle;
+
+                //direction definition
+                if ((pointRelativeRingCentre.x > 0) && (pointRelativeRingCentre.y > 0))
+                {
+    console.info('1');
+                    //1 quadrant
+                    if ((mouseMoveEvent.x < pointPos.x) && (mouseMoveEvent.y > pointPos.y))
+                    {
+                        angleOffset = -angleOffset;
+                    }
+                }
+                if ((pointRelativeRingCentre.x > 0) && (pointRelativeRingCentre.y < 0))
+                {
+    console.info('2');
+                    //2 quadrant
+                    if ((mouseMoveEvent.x > pointPos.x) && (mouseMoveEvent.y < pointPos.y))
+                    {
+                        angleOffset = -angleOffset;
+                    }
+                }
+                if ((pointRelativeRingCentre.x < 0) && (pointRelativeRingCentre.y < 0))
+                {
+    console.info('3');
+                    //3 quadrant
+                    if ((mouseMoveEvent.x < pointPos.x) && (mouseMoveEvent.y < pointPos.y))
+                    {
+                        angleOffset = -angleOffset;
+                    }
+                }
+                if ((pointRelativeRingCentre.x < 0) && (pointRelativeRingCentre.y > 0))
+                {
+    console.info('4');
+                    //4 quadrant
+                    if ((mouseMoveEvent.x > pointPos.x) && (mouseMoveEvent.y > pointPos.y))
+                    {
+                        angleOffset = -angleOffset;
+                    }
+                }
+
+
+                pointPos = mouseMoveEvent;
 				catObj.rotate(angleOffset);
 			}
 		}
