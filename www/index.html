@@ -58,14 +58,11 @@
             var k1 = (selectorCentre.y-mouseDownEvent.y) / (mouseDownEvent.x-selectorCentre.x);
 
             var anglePos = 0;
-//			var tgStartAngle = (mouseDownEvent.x-selectorCentre.x) / (mouseDownEvent.y-selectorCentre.y); //start point and centre are not changable
 			return function() {
                 var angleOffset;
                 var mouseMoveEvent = d3.event;
-                //var k2 = (mouseMoveEvent.y-selectorCentre.y) / (mouseMoveEvent.x-selectorCentre.x);
                 var k2 = (selectorCentre.y-mouseMoveEvent.y) / (mouseMoveEvent.x-selectorCentre.x);
 
- //				var tgFinishAngle = (mouseMoveEvent.x-selectorCentre.x) / (mouseMoveEvent.y-selectorCentre.y);
                 var tg = Math.abs((k1-k2) / (1+k1*k2));
                 console.info(tg);
                 var angle = Math.atan(tg)*180 / Math.PI; //current
@@ -73,7 +70,6 @@
                 angleOffset = Math.abs(angle - anglePos);
                 console.info('offset', angleOffset);
                 anglePos = angle;
-//				var angle = Math.atan(tgStartAngle) - Math.atan(tgFinishAngle);
 				catObj.rotate(angleOffset);
 			}
 		}
@@ -104,11 +100,10 @@
                 var centre = that.getCentre();
                 var catMatrix = that.catNode.node().getScreenCTM();
                 centre = centre.matrixTransform(catMatrix);
-
                 var selectorBoundBox = canvas.select('#selector').node().getBBox();
                 that.selectionMarker = canvas.select('#markerGroup')
                       .append('use')
-                      .attr('xlink:href', '#selector')    
+                      .attr('xlink:href', '#selector')
                       .attr('x', centre.x - selectorBoundBox.width / 2)
                       .attr('y', centre.y - selectorBoundBox.height / 2)
                       .classed('pre', true)
@@ -117,14 +112,14 @@
                 that.selectionMarker.node().cat = that;
                 that.selectionMarker.on('mouseout', that.events.catDeselect);
             },
-            
+
             'catDeselect' : function()
             {
                 that.selectionMarker.remove();
                 that.selectionMarker = null;
             },
-            
-            'catchCat' : function() 
+
+            'catchCat' : function()
             {
                 canvas.on('mousemove', that.events.moveCat);
                 canvas.on('mouseup', that.events.releaseCat);
@@ -132,83 +127,83 @@
                 that.lastY = d3.event.y;
                 that.pos.x = that.catNode.attr('x')*1;
                 that.pos.y = that.catNode.attr('y')*1;
-                
+
                 console.info('initialPos',that.pos);
                 console.info('catNodeAtr',that.catNode);
             },
-            
+
             'moveCat' : function()
             {
                 var offsetX = d3.event.x - that.lastX;
                 that.lastX = d3.event.x;
-                
+
                 var offsetY = d3.event.y - that.lastY;
                 that.lastY = d3.event.y;
-                
+
                 that.pos.x += offsetX;
                 that.pos.y += offsetY;
                 that.catNode.attr('x', that.pos.x);
                 that.catNode.attr('y', that.pos.y);
-                if (that.selectionMarker) 
+                if (that.selectionMarker)
                 {
                     that.selectionMarker.attr('cx', that.selectionMarker.attr('cx')*1 + offsetX);
                     that.selectionMarker.attr('cy', that.selectionMarker.attr('cy')*1 + offsetY);
                 }
             },
-            
+
             'releaseCat' : function()
             {
                 canvas.on('mousemove', null);
             }
         }
 
-	    that.construct = function() 
+	    that.construct = function()
 	    {
 			catNode.on('mousedown', that.events.catchCat);
             catNode.on('mouseover', that.events.catPreselect);
 	    }
-        
+
         that.getCentre = function()
         {
             var catBoundBox = that.catNode.node().getBBox();
-            var centre = canvas.node().createSVGPoint(); 
-            centre.x = that.catNode.attr('x')*1 + catBoundBox.width / 2; 
-            centre.y = that.catNode.attr('y')*1 + catBoundBox.height / 2; 
+            var centre = canvas.node().createSVGPoint();
+            centre.x = that.catNode.attr('x')*1 + catBoundBox.width / 2;
+            centre.y = that.catNode.attr('y')*1 + catBoundBox.height / 2;
             return centre;
         }
-        	    
+
 	    that.rotate = function(angle)
         {
-            var domCat = that.catNode.node();           
+            var domCat = that.catNode.node();
             var matrixTransformGroupToCat = domCat.getTransformToElement(domCat.parentNode);
             matrixTransformGroupToCat = matrixTransformGroupToCat.translate(that.getCentre().x, that.getCentre().y);
-            matrixTransformGroupToCat = matrixTransformGroupToCat.rotate(angle);                            
+            matrixTransformGroupToCat = matrixTransformGroupToCat.rotate(angle);
             matrixTransformGroupToCat = matrixTransformGroupToCat.translate(-that.getCentre().x, -that.getCentre().y);
             var m = (m = matrixTransformGroupToCat, [m.a, m.b, m.c, m.d, m.e, m.f].join(' '));
             that.catNode.attr('transform', 'matrix('+m+')');
         }
-        
+
 	    that.construct();
 	}
-	
+
     // fetches the document for the given embedding_element
 	function getSubDocument(embedding_element)
 	{
-		if (embedding_element.contentDocument) 
+		if (embedding_element.contentDocument)
 		{
 			return embedding_element.contentDocument;
-		} 
-		else 
+		}
+		else
 		{
 			var subdoc = null;
-			try 
+			try
 			{
 				subdoc = embedding_element.getSVGDocument();
 			} catch(e) {}
 			return subdoc;
 		}
 	}
-	
+
     function redraw()
     {
         var cats = canvas.select('#catGroup')
@@ -216,7 +211,7 @@
                          .data(catNames)
                          .enter()
                              .append('use')
-                             .attr('xlink:href', '#shreda')      
+                             .attr('xlink:href', '#shreda')
                              .attr('x', function(d, i){return i*200})
                              .attr('y', 0)
                              .style('opacity','0')
@@ -224,19 +219,19 @@
                              .call(initCats)
                          .transition()
                              .duration(3000)
-                             .style('opacity', '1') 
+                             .style('opacity', '1')
                              .each('end', function() {
                                   d3.select(this)
                                     .transition()
                                         //.delay(function(d, i) { return d3.random.normal(500, 500)(); })
-                                        .duration(250 / (gravity+1) *10)  
+                                        .duration(250 / (gravity+1) *10)
                                         .attr('transform', 'translate(' + windOffset + ', 250)');
                              });
     }
 
 	function findSVG(embed_id)
 	{
-		var obj = document.getElementById(embed_id); 
+		var obj = document.getElementById(embed_id);
         var subDoc = getSubDocument(obj);
         var svg = d3.select(subDoc).select('svg');
         return svg;
@@ -249,7 +244,7 @@
 			cats.push(new Cat(name, d3.select(this), canvas));
 		})
 	}
-	
+
 	function initSlider(sliderObj, on_pos)
 	{
 		var pos = 0;
@@ -262,16 +257,16 @@
 			var lastX = d3.event.x;
 			sliderObj.on('mousemove', function()
 			{
-				var moveOffset = d3.event.x - lastX;  
+				var moveOffset = d3.event.x - lastX;
 				if (((pos + moveOffset) > stripeLength) || (pos + moveOffset < 0))
 				{
-					return ;	
+					return ;
 				}
 				pos += moveOffset;
 				lastX = d3.event.x;
 				pointerObj.attr('transform', 'translate('+ pos +', 0)');
-				
-				var newPos = Math.round(pos / stripeLength * 100);  
+
+				var newPos = Math.round(pos / stripeLength * 100);
 				on_pos(newPos);
 			})
 			sliderObj.on('mouseup', function()
@@ -280,7 +275,7 @@
 			});
 		})
 	}
-	
+
 	function init()
 	{
 			canvas = findSVG('emb');
@@ -292,14 +287,14 @@
 			initSlider(sliderWind, function(new_pos) {
 				windOffset = new_pos * 1.5;
 			});
-			
+
 			// gravity
 			var sliderGravity = findSVG('slider_gravity');
 			initSlider(sliderGravity, function(new_pos)
 			{
 				gravity = new_pos;
 			});
-			
+
             canvas.on('click',function()
             {
 				if (d3.event.target == canvas.node())
@@ -307,14 +302,14 @@
 	            	catNames.push('shreda');
 	                redraw();
 				}
-            })     
-            
+            })
+
             /*create instance of selector*/
             catSelector = new CatSelector('selector', canvas);
-	}                                   
+	}
 	// wait until all the resources are loaded
 	window.addEventListener("load", init, false);
 
-    </script>    
+    </script>
   </body>
 </html>

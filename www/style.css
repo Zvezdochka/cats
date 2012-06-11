@@ -6,10 +6,10 @@ html, body {height: 100%;}
 
 p {padding: 10px;}
 
-#header 
+#header
 {
 	height: 220px;
-	background-image: url("images/ii_01.png"); 
+	background-image: url("images/ii_01.png");
 	text-align: center;
 }
 #text {background: #D5FFD5;}
@@ -20,11 +20,11 @@ p {padding: 10px;}
   position: relative;
   height: 100px; background: #FFCACA;
   margin-top: -100px;*/
-	position: absolute; 
-	bottom: 0; 
-	left: 0; 
-	width: 100%; 
-	height: 251px; 
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 251px;
 	background-image: url("images/ii_03.png");
 	overflow: hidden; /*Disable scrollbars. Set to "scroll" to enable*/
 }
@@ -41,13 +41,13 @@ p {padding: 10px;}
 	left: 0;
 	right: 0;
 	bottom: 100px; /*Set bottom value to HeightOfFrameDiv*/
-	overflow: auto; 
+	overflow: auto;
 }
-#container 
+#container
 {
 	width: 100%;
 }
-#content 
+#content
 {
     /*position: relative;*/
     min-height: 100%;
@@ -55,14 +55,14 @@ p {padding: 10px;}
     float: right;
     margin-left: -1826px;
 }
-#text 
+#text
 {
 	margin: 0 1826px;/*Set left margin to (leftColumnWidth + RightColumnWidth)*/
     padding-bottom: 100px;
 	background-image: url("images/img_06.png");
 	background-repeat: repeat-y;
 }
-#left 
+#left
 {
 	float: left;
 	width: 525px;
@@ -70,10 +70,8 @@ p {padding: 10px;}
 	background-repeat: repeat-y;
 }
 
-#right 
+#right
 {
 	float: left;
 	width: 1301px;
 }
-
-/* */
