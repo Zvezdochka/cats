@@ -20,13 +20,19 @@
 	<script>
     var catNames = [];
     var cats = [];
+    var mice = [];
     var canvas;
     var windOffset = 0;
     var pos = 0;
     var gravity = 0;
 	var catSelector = null;
 	
-	var CatSelector = function(selectorGroupId, canvas)
+	var Mouse = function()
+    {
+
+    }
+    
+    var CatSelector = function(selectorGroupId, canvas)
 	{
 		var that = this;
 		that.canvas = canvas; 
@@ -122,6 +128,7 @@
 		that.catNode = catNode;
         that.canvas = canvas;
 		that.selectionMarker = null;
+        that.catAnnihilatorPower = 30;
 		that.events =
         {
             'catPreselect' : function()
@@ -305,7 +312,50 @@
 		})
 	}
 
-	function init()
+	function redrawMice()
+    {
+        canvas.selectAll("use.mouse")
+            .data(nodes)
+            .enter()
+                .insert("use")
+                .attr('xlink:href', '#mouse')    
+                .attr("class", "mouse")
+                .attr("x", function(d) { return d.x; })
+                .attr("y", function(d) { return d.y; })
+                .call(force.drag)
+                .on('dblclick', function(d)
+        {
+            
+            //finв cat-actor
+            cats.forEach(function(cat)
+            {
+                var distanceX = cat.pos.x - d.x;
+                var distanceY = cat.pos.y - d.y;
+                if (sqrt(distanceX * distanceX + distanceY * distanceY) <= cat.catAnnihilatorPower)
+                {
+                    // mouse enough close
+                    
+                }
+            })
+            // find nearly nodes
+            //push
+        }
+    }
+    
+    function redrawMiceLinks()
+    {
+        canvas.selectAll("line.mouseLink")
+            .data(links)
+            .enter()
+                .insert("line")
+                .attr("class", "mouseLink")
+                .attr("x1", function(d) { return d.source.x; })
+                .attr("y1", function(d) { return d.source.y; })
+                .attr("x2", function(d) { return d.target.x; })
+                .attr("y2", function(d) { return d.target.y; });
+    }
+
+    function init()
 	{
 			canvas = findSVG('emb');
 			canvas.append('g').attr('id','markerGroup');
@@ -324,13 +374,28 @@
 				gravity = new_pos;
 			});
 
-            canvas.on('click',function()
+            var nodes = [];
+            var links = [];
+            var force = d3.layout.force()
+                .nodes(nodes)
+                .links(links)
+                .size([canvas.node().clientWidth, canvas.node().clientHeight]);
+
+            canvas.on('click', function()
             {
 				if (d3.event.target == canvas.node())
 				{
 	            	catNames.push('shreda');
 	                redraw();
-				}
+                    
+                    if (d3.event.ctrlKey) 
+                    {
+                          var point = d3.svg.mouse(this),
+                              node = {x: point[0], y: point[1]},
+                              n = nodes.push(node);
+                          redrawMice();    
+                    }
+                }
             })
 
             /*create instance of selector*/
