@@ -1,16 +1,17 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <head> 
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"> 
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <!-- 	<script src="http://ajax.googleapis.com/ajax/libs/dojo/1.7.2/dojo/dojo.js" data-dojo-config="async: true"></script> -->
-  
+
 <!--    <link href="style.css" type="text/css" rel="stylesheet" />    -->
 
-    <script type="text/javascript" src="http://mbostock.github.com/d3/d3.v2.js?2.9.1"></script> 
-  </head> 
+<!--    <script type="text/javascript" src="http://mbostock.github.com/d3/d3.v2.js?2.9.1"></script>-->
+<script type="text/javascript" src="mbostock-d3-e71de33/d3.v2.js"></script>
+  </head>
 
-    <body> 
-        <div style="float: left; width: 2500px; margin-right: -400px; height: 100%;">  
+    <body>
+        <div style="float: left; width: 2500px; margin-right: -400px; height: 100%;">
             <embed id="emb" src="shreda.svg" width="100%" height="100%" type="image/svg+xml" />
         </div>
         <div style="float: left; width: 400px; height: 100%;">
@@ -26,16 +27,22 @@
     var pos = 0;
     var gravity = 0;
 	var catSelector = null;
-	
-	var Mouse = function()
-    {
+    var forceNodes = [];
+    var forceLinks = [];
+    var force;
 
+	var Mouse = function(mouseNode)
+    {
+        var that = this;
+        that.forceNode = null;
+        that.mouseNode = mouseNode;
+        that.catBelongTo = null;
     }
-    
+
     var CatSelector = function(selectorGroupId, canvas)
 	{
 		var that = this;
-		that.canvas = canvas; 
+		that.canvas = canvas;
 		that.selector = null;
 		that.buttons = {rotate: null};
 
@@ -49,7 +56,7 @@
 		that.buttonRotatePress = function()
 		{
             that.canvas.on('mousemove', that.buttonRotateMove(d3.event));
-			that.canvas.on('mouseup', that.buttonRotateRelease);            
+			that.canvas.on('mouseup', that.buttonRotateRelease);
 		}
 
 		that.buttonRotateMove = function(mouseDownEvent)
@@ -68,38 +75,30 @@
             startAngle = that.radToDeg(startAngle);
             var anglePos = startAngle;
 
-            console.info('Start angle', startAngle);
-            
 			return function() {
                 var angleOffset;
                 var mouseMoveEvent = d3.event;
-                
+
                 var movePoint = {
                     x: mouseMoveEvent.x-selectorCentre.x,
                     y: selectorCentre.y-mouseMoveEvent.y
                 }
-                
+
                 var angle = Math.atan(movePoint.y / movePoint.x);
-                console.info('Angle', that.radToDeg(angle));
-                
+
                 if (movePoint.x < 0 && movePoint.y > 0)
                 {
-                    console.info('Quadrant 4');
                     angle += Math.PI;
-                    console.info('Corrected angle', that.radToDeg(angle));
                 }
                 else if (movePoint.x < 0 && movePoint.y < 0)
                 {
-                    console.info('Quadrant 3');
                     angle -= Math.PI;
-                    console.info('Corrected angle', that.radToDeg(angle));
                 }
-                
+
                 angle = that.radToDeg(angle);
                 angleOffset = -(angle - anglePos);
                 anglePos = angle;
 
-				console.info('offset', angleOffset);
                 catObj.rotate(angleOffset);
 			}
 		}
@@ -108,10 +107,9 @@
         {
             return radian * 180 / Math.PI;
         }
-        
+
 		that.buttonRotateRelease = function()
 		{
-			console.info("mouseUp");
             that.canvas.on('mousemove', null);
 		}
 
@@ -128,7 +126,8 @@
 		that.catNode = catNode;
         that.canvas = canvas;
 		that.selectionMarker = null;
-        that.catAnnihilatorPower = 30;
+        that.catAnnihilatorPower = 300;
+        that.forceNode = null;
 		that.events =
         {
             'catPreselect' : function()
@@ -144,15 +143,17 @@
                       .attr('y', centre.y - selectorBoundBox.height / 2)
                       .classed('pre', true)
                       .classed('selector', true);
-                //that.selectionMarker.bind('cat', this);
-                that.selectionMarker.node().cat = that;
+                that.selectionMarker.node().cat = that;       //bind cat & this
+console.info("sm1",that.selectionMarker);   //? who write it
                 that.selectionMarker.on('mouseout', that.events.catDeselect);
+                catNode.on('mouseover', null);
             },
 
             'catDeselect' : function()
             {
                 that.selectionMarker.remove();
                 that.selectionMarker = null;
+                catNode.on('mouseover', that.events.catPreselect);
             },
 
             'catchCat' : function()
@@ -163,9 +164,6 @@
                 that.lastY = d3.event.y;
                 that.pos.x = that.catNode.attr('x')*1;
                 that.pos.y = that.catNode.attr('y')*1;
-
-                console.info('initialPos',that.pos);
-                console.info('catNodeAtr',that.catNode);
             },
 
             'moveCat' : function()
@@ -277,7 +275,10 @@
 	{
 		catsSelection.each(function(name)
 		{
-			cats.push(new Cat(name, d3.select(this), canvas));
+            var newCat = new Cat(name, d3.select(this), canvas);
+            newCat.forceNode = {'x': this.x.animVal.value, 'y':this.y.animVal.value};
+            forceNodes.push(newCat.forceNode);
+			cats.push(newCat);
 		})
 	}
 
@@ -314,38 +315,85 @@
 
 	function redrawMice()
     {
-        canvas.selectAll("use.mouse")
-            .data(nodes)
+        canvas.selectAll("use.mouse, use.cat") // participantes in force relationship
+            .data(forceNodes)
             .enter()
                 .insert("use")
-                .attr('xlink:href', '#mouse')    
+                .attr('xlink:href', '#shreda')
+//                .attr('xlink:href', '#mouse')
                 .attr("class", "mouse")
                 .attr("x", function(d) { return d.x; })
                 .attr("y", function(d) { return d.y; })
                 .call(force.drag)
-                .on('dblclick', function(d)
-        {
-            
-            //finв cat-actor
-            cats.forEach(function(cat)
-            {
-                var distanceX = cat.pos.x - d.x;
-                var distanceY = cat.pos.y - d.y;
-                if (sqrt(distanceX * distanceX + distanceY * distanceY) <= cat.catAnnihilatorPower)
+                .call(function(miceSelection)
                 {
-                    // mouse enough close
-                    
-                }
-            })
-            // find nearly nodes
-            //push
-        }
+                    miceSelection.each(function()
+                    {
+                        var mouse = new Mouse(d3.select(this));
+                        mice.push(mouse);
+                    })
+                })
+                .on('dblclick', function(d)
+                {   // making link between mouse and cat
+                    //find cat-actor
+console.info("dd",d);
+                    cats.forEach(function(cat)
+                    {
+                        var distanceCat = {'x': cat.pos.x - d.x, 'y': cat.pos.y - d.y};
+console.info("catpos",cat.pos.x);
+console.info("d",d.x);
+                        distanceCat = Math.sqrt(distanceCat.x * distanceCat.x + distanceCat.y * distanceCat.y);
+console.info("distanceCat",distanceCat);
+                        if (distanceCat <= cat.catAnnihilatorPower)
+                        {   //find mouse to link to
+console.info("cat found");
+                            var distanceMin = 100000;
+                            mice.forEach(function(mouse)
+                            {
+                                if (mouse.catBelongTo == cat)
+                                {
+                                    var distanceMouse = {'x': mouse.forceNode.x - d.x, 'y': mouse.forceNode.y - d.y};
+                                console.info(distanceMouse);
+//                                        vat t =  Math.sqrt(distanceMouse.x * distanceMouse.x + distanceMouse.y * distanceMouse.y);
+                                                       console.info("t",t);
+                                    if (distanceMouse < distanceMin)
+                                    {
+                                        distanceMin = distanceMouse;
+                                    }
+                                }
+                            });
+console.info("dMin",distanceMin);
+                            var target = null;
+                            if (distanceMin < distanceCat)
+                            {
+                                target =  mouse.forceNode;
+                            } else
+                            {   // mouse enough close to cat
+                                target = cat.forceNode;
+                            }
+                            link = {'target': target, 'source': d};
+                            forceLinks.push(link);
+
+                            redrawMiceLinks();
+
+                            //save link to cat
+                            mice.forEach(function(mouse)
+                            {
+                                if (mouse.mouseNode == d3.select(this))
+                                {   //found mouse to link it to cat
+                                    mouse.catBelongTo = cat;
+                                }
+                            })
+                        }
+                    })
+                });
+        force.start();
     }
-    
+
     function redrawMiceLinks()
     {
         canvas.selectAll("line.mouseLink")
-            .data(links)
+            .data(forceLinks)
             .enter()
                 .insert("line")
                 .attr("class", "mouseLink")
@@ -353,10 +401,12 @@
                 .attr("y1", function(d) { return d.source.y; })
                 .attr("x2", function(d) { return d.target.x; })
                 .attr("y2", function(d) { return d.target.y; });
+        force.start();
     }
 
     function init()
 	{
+//                      var     nde = {'x': point[0], 'y': point[1]};
 			canvas = findSVG('emb');
 			canvas.append('g').attr('id','markerGroup');
 			canvas.append('g').attr('id','catGroup');
@@ -374,26 +424,42 @@
 				gravity = new_pos;
 			});
 
-            var nodes = [];
-            var links = [];
-            var force = d3.layout.force()
-                .nodes(nodes)
-                .links(links)
+            force = d3.layout.force()
+                .nodes(forceNodes)
+                .links(forceLinks)
+    .gravity(0)
+    .charge(0)
+    .linkDistance(30)
+
                 .size([canvas.node().clientWidth, canvas.node().clientHeight]);
 
             canvas.on('click', function()
             {
-				if (d3.event.target == canvas.node())
-				{
-	            	catNames.push('shreda');
-	                redraw();
-                    
-                    if (d3.event.ctrlKey) 
-                    {
-                          var point = d3.svg.mouse(this),
-                              node = {x: point[0], y: point[1]},
-                              n = nodes.push(node);
-                          redrawMice();    
+                if (d3.event.ctrlKey)
+                { // mouse adding
+                      var point = d3.svg.mouse(this), // coords where comp mouse has clicked
+                          newMouseNode = {'x': point[0], 'y': point[1]},
+                          n = forceNodes.push(newMouseNode);
+                      console.info("newMouseNode",forceNodes); //PROBLEM
+                      redrawMice();
+                      /*test*/
+/*                      force.start();
+                      forceNodes.forEach(function(target)
+                      {
+                          var dx = target.x - newMouseNode.x; var dy = target.y - newMouseNode.y;
+                          if(Math.sqrt(dx*dx + dy*dy) < 30)
+                          {
+                              forceLinks.push({'source':newMouseNode,'target':target});
+                          }
+                      })
+                      force.start();
+                      redrawMiceLinks();*/
+                } else
+                { // cat adding
+    				if (d3.event.target == canvas.node())
+    				{
+    	            	catNames.push('shreda');
+    	                redraw();
                     }
                 }
             })
