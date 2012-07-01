@@ -6,8 +6,8 @@
 
 <!--    <link href="style.css" type="text/css" rel="stylesheet" />    -->
 
-<!--    <script type="text/javascript" src="http://mbostock.github.com/d3/d3.v2.js?2.9.1"></script>-->
-<script type="text/javascript" src="mbostock-d3-e71de33/d3.v2.js"></script>
+    <script type="text/javascript" src="http://mbostock.github.com/d3/d3.v2.js?2.9.1"></script>
+<!--<script type="text/javascript" src="mbostock-d3-e71de33/d3.v2.js"></script>-->
   </head>
 
     <body>
@@ -126,7 +126,7 @@
 		that.catNode = catNode;
         that.canvas = canvas;
 		that.selectionMarker = null;
-        that.catAnnihilatorPower = 300;
+        that.catAnnihilatorPower = 1000;
         that.forceNode = null;
 		that.events =
         {
@@ -144,7 +144,6 @@
                       .classed('pre', true)
                       .classed('selector', true);
                 that.selectionMarker.node().cat = that;       //bind cat & this
-console.info("sm1",that.selectionMarker);   //? who write it
                 that.selectionMarker.on('mouseout', that.events.catDeselect);
                 catNode.on('mouseover', null);
             },
@@ -254,13 +253,26 @@ console.info("sm1",that.selectionMarker);   //? who write it
                          .transition()
                              .duration(3000)
                              .style('opacity', '1')
-                             .each('end', function() {
+                             /*.each('end', function() {
                                   d3.select(this)
                                     .transition()
                                         //.delay(function(d, i) { return d3.random.normal(500, 500)(); })
                                         .duration(250 / (gravity+1) *10)
-                                        .attr('transform', 'translate(' + windOffset + ', 250)');
-                             });
+                                        .attr('transform', 'translate(' + windOffset + ', 250)')
+                                        .each('end', function()
+                                        {
+                                            var catMatrix = this.getScreenCTM();
+                                            var catPoint = canvas.node().createSVGPoint();
+                                            var catForceNode = this.cat.forceNode;
+                                            catPoint.x = catForceNode.x;
+                                            catPoint.y = catForceNode.y;
+                                            var changedPoint = catPoint.matrixTransform(catMatrix);
+                                            catForceNode.x = changedPoint.x;
+                                            catForceNode.y = changedPoint.y;
+console.info("f",catForceNode);
+                                        })
+                                        ;
+                             })*/;
     }
 
 	function findSVG(embed_id)
@@ -276,7 +288,10 @@ console.info("sm1",that.selectionMarker);   //? who write it
 		catsSelection.each(function(name)
 		{
             var newCat = new Cat(name, d3.select(this), canvas);
+            this.cat = newCat;
+            console.info("this", {'x': this.x.animVal.value, 'y':this.y.animVal.value});
             newCat.forceNode = {'x': this.x.animVal.value, 'y':this.y.animVal.value};
+            console.info("cat init", newCat.forceNode);
             forceNodes.push(newCat.forceNode);
 			cats.push(newCat);
 		})
@@ -315,15 +330,22 @@ console.info("sm1",that.selectionMarker);   //? who write it
 
 	function redrawMice()
     {
+        var updaterNodes = function(selection)
+        {
+            selection    
+                .attr("x", function(d) { return d.x; })
+                .attr("y", function(d) { return d.y; });
+        }
         canvas.selectAll("use.mouse, use.cat") // participantes in force relationship
-            .data(forceNodes)
+            .data(forceNodes)           // potential BUG: corrupted match between forceNodes and DOM's elements
+            .call(updaterNodes)
             .enter()
                 .insert("use")
-                .attr('xlink:href', '#shreda')
-//                .attr('xlink:href', '#mouse')
+//                .attr('xlink:href', '#shreda')
+                .attr('xlink:href', '#chromed_mouse')
                 .attr("class", "mouse")
-                .attr("x", function(d) { return d.x; })
-                .attr("y", function(d) { return d.y; })
+                .attr('width', 100)
+                .call(updaterNodes)
                 .call(force.drag)
                 .call(function(miceSelection)
                 {
@@ -336,26 +358,21 @@ console.info("sm1",that.selectionMarker);   //? who write it
                 .on('dblclick', function(d)
                 {   // making link between mouse and cat
                     //find cat-actor
-console.info("dd",d);
                     cats.forEach(function(cat)
                     {
                         var distanceCat = {'x': cat.pos.x - d.x, 'y': cat.pos.y - d.y};
-console.info("catpos",cat.pos.x);
-console.info("d",d.x);
                         distanceCat = Math.sqrt(distanceCat.x * distanceCat.x + distanceCat.y * distanceCat.y);
 console.info("distanceCat",distanceCat);
                         if (distanceCat <= cat.catAnnihilatorPower)
-                        {   //find mouse to link to
+                        {   //cat found. find mouse to link to
 console.info("cat found");
                             var distanceMin = 100000;
                             mice.forEach(function(mouse)
                             {
                                 if (mouse.catBelongTo == cat)
                                 {
-                                    var distanceMouse = {'x': mouse.forceNode.x - d.x, 'y': mouse.forceNode.y - d.y};
-                                console.info(distanceMouse);
-//                                        vat t =  Math.sqrt(distanceMouse.x * distanceMouse.x + distanceMouse.y * distanceMouse.y);
-                                                       console.info("t",t);
+                                    var distanceMouse = ({'x': mouse.forceNode.x - d.x, 'y': mouse.forceNode.y - d.y},
+                                                        Math.sqrt(distanceMouse.x * distanceMouse.x + distanceMouse.y * distanceMouse.y));
                                     if (distanceMouse < distanceMin)
                                     {
                                         distanceMin = distanceMouse;
@@ -369,12 +386,14 @@ console.info("dMin",distanceMin);
                                 target =  mouse.forceNode;
                             } else
                             {   // mouse enough close to cat
+
                                 target = cat.forceNode;
+console.info("target",target);
                             }
                             link = {'target': target, 'source': d};
                             forceLinks.push(link);
-
-                            redrawMiceLinks();
+                            force.start();
+                            //redrawMiceLinks();
 
                             //save link to cat
                             mice.forEach(function(mouse)
@@ -383,30 +402,35 @@ console.info("dMin",distanceMin);
                                 {   //found mouse to link it to cat
                                     mouse.catBelongTo = cat;
                                 }
-                            })
+                            });
+                      //      break;
                         }
                     })
                 });
-        force.start();
     }
 
     function redrawMiceLinks()
     {
-        canvas.selectAll("line.mouseLink")
-            .data(forceLinks)
-            .enter()
-                .insert("line")
-                .attr("class", "mouseLink")
+        var updaterLinks = function(selection)
+        {
+            selection
                 .attr("x1", function(d) { return d.source.x; })
                 .attr("y1", function(d) { return d.source.y; })
                 .attr("x2", function(d) { return d.target.x; })
                 .attr("y2", function(d) { return d.target.y; });
-        force.start();
+        };
+
+        canvas.selectAll("line.mouseLink")
+            .data(forceLinks)
+            .call(updaterLinks)
+            .enter()
+                .insert("line")
+                .attr("class", "mouseLink")
+                .call(updaterLinks);
     }
 
     function init()
 	{
-//                      var     nde = {'x': point[0], 'y': point[1]};
 			canvas = findSVG('emb');
 			canvas.append('g').attr('id','markerGroup');
 			canvas.append('g').attr('id','catGroup');
@@ -427,33 +451,29 @@ console.info("dMin",distanceMin);
             force = d3.layout.force()
                 .nodes(forceNodes)
                 .links(forceLinks)
-    .gravity(0)
-    .charge(0)
-    .linkDistance(30)
+                //.gravity(0)
+                .charge(-1000)
+                //.linkDistance(0)
+                .size([500, 250])
+                .start();
 
-                .size([canvas.node().clientWidth, canvas.node().clientHeight]);
+                console.info([canvas.node().clientWidth, canvas.node().clientHeight]);
+
+               force.on('tick', function()
+               {
+
+                    redrawMice();
+                    redrawMiceLinks();
+               }) 
 
             canvas.on('click', function()
             {
                 if (d3.event.ctrlKey)
                 { // mouse adding
-                      var point = d3.svg.mouse(this), // coords where comp mouse has clicked
-                          newMouseNode = {'x': point[0], 'y': point[1]},
-                          n = forceNodes.push(newMouseNode);
-                      console.info("newMouseNode",forceNodes); //PROBLEM
-                      redrawMice();
-                      /*test*/
-/*                      force.start();
-                      forceNodes.forEach(function(target)
-                      {
-                          var dx = target.x - newMouseNode.x; var dy = target.y - newMouseNode.y;
-                          if(Math.sqrt(dx*dx + dy*dy) < 30)
-                          {
-                              forceLinks.push({'source':newMouseNode,'target':target});
-                          }
-                      })
-                      force.start();
-                      redrawMiceLinks();*/
+                    var point = d3.svg.mouse(this), // coords where comp mouse has clicked
+                        newMouseNode = {'x': point[0], 'y': point[1]},
+                        n = forceNodes.push(newMouseNode);
+                      //redrawMice();
                 } else
                 { // cat adding
     				if (d3.event.target == canvas.node())
@@ -462,6 +482,7 @@ console.info("dMin",distanceMin);
     	                redraw();
                     }
                 }
+                force.start();
             })
 
             /*create instance of selector*/
