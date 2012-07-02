@@ -358,14 +358,17 @@ console.info("f",catForceNode);
                 .on('dblclick', function(d)
                 {   // making link between mouse and cat
                     //find cat-actor
+                    var cat_found = false;
                     cats.forEach(function(cat)
                     {
+                        if (cat_found) {return ;}
                         var distanceCat = {'x': cat.pos.x - d.x, 'y': cat.pos.y - d.y};
                         distanceCat = Math.sqrt(distanceCat.x * distanceCat.x + distanceCat.y * distanceCat.y);
 console.info("distanceCat",distanceCat);
                         if (distanceCat <= cat.catAnnihilatorPower)
                         {   //cat found. find mouse to link to
 console.info("cat found");
+                            cat_found = true;
                             var distanceMin = 100000;
                             mice.forEach(function(mouse)
                             {
