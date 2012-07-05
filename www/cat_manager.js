@@ -3,9 +3,11 @@ var CatManager = function()
 	var that = this;
 	that.canvas =  null;
 	that.force = null;
+    that.forceNodes = [];
 	that.catContainer = null;
 	that.markerContainer = null;
     that.cats = [];
+    that.mice = [];
 
 	that.construct = function(svgElementSelector)
 	{
@@ -31,28 +33,38 @@ var CatManager = function()
 	    that.canvas.on('click', that.addNewAnimal);
 	}
 
-	that.getGlobalSettings = function()
-	{
-		return {'canvas': that.canvas, 
-                'force': that.force, 
-                'catContainer': that.catContainer,
-                'markerContainer': that.markerContainer,
-                'cats': that.cats
-                };
-	}
+    that.loadEnvironment = function(animal)
+    {
+        var environment = 
+        {   
+            'canvas'         : that.canvas, 
+            'force'          : that.force, 
+            'catContainer'   : that.catContainer,
+            'markerContainer': that.markerContainer,
+        };
 
-	that.createNewAnimal = function()
+        for (var envName in environment)
+        {
+            animal[envName] = environment[envName];
+        };
+    }
+
+	that.addNewAnimal = function()
 	{
 		if (d3.event.target == that.canvas.node())
 		{
 	        if (d3.event.ctrlKey)
 	        { // mouse creating
+                var newMouse = new Mouse(that);
+                that.mice.push(newMouse);
+
 	            var point = d3.svg.mouse(this), // coords where comp mouse has clicked
 	                newMouseNode = {'x': point[0], 'y': point[1]},
 	                n = forceNodes.push(newMouseNode);
 	        } else
 	        { // cat creating
             	var newCat = new Cat(that); //pass catManager
+                that.cats.push(newCat);
 
             	catNames.push('shreda');
                 redraw();
@@ -61,9 +73,9 @@ var CatManager = function()
     	}
 	}
 
-    that.addNewCat = function(catObj)
+    that.addForceNode = function(node)
     {
-        that.cats.push(catObj);
+        that.forceNodes.push(node);
     }
 
 	that.construct.apply(that, arguments);

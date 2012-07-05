@@ -79,11 +79,7 @@
 	    {
             that.manager = manager; 
             // getting canvas, force, containers, cats
-            var globalSettings = that.manager.getGlobalSettings();
-            for (var settingName in globalSettings)
-            {
-                that[settingName] = globalSettings[settingName];
-            };
+            manager.loadEnvironment(that);
 
             //createing cat in DOM
             that.domNode = that.catContainer.append('use');
@@ -98,8 +94,8 @@
 
             // creating cat in force nodes
             that.forceNode = {'x': that.domNode.x.animVal.value, 'y':that.domNode.y.animVal.value};
-            forceNodes.push(that.forceNode);
-            that.manager.addNewCat(that);
+            that.forceNodes.push(that.forceNode);
+//            that.manager.addNewCat(that);
 	    }
 
         that.getCentre = function()
