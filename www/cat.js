@@ -11,7 +11,7 @@
 		that.lastY = null;
 		that.pos = {x: 0, y: 0};
 		that.selectionMarker = null;
-        that.catAnnihilatorPower = 1000;
+        that.annihilatorPower = 1000;
 
 		that.events =
         {
@@ -116,6 +116,11 @@
             matrixTransformGroupToCat = matrixTransformGroupToCat.translate(-that.getCentre().x, -that.getCentre().y);
             var m = (m = matrixTransformGroupToCat, [m.a, m.b, m.c, m.d, m.e, m.f].join(' '));
             that.catNode.attr('transform', 'matrix('+m+')');
+        }
+
+        that.getAnnihilatorPower = function()
+        {
+            return that.annihilatorPower;
         }
 
 	    that.construct.apply(that, arguments);

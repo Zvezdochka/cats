@@ -40,13 +40,18 @@ var CatManager = function()
             'canvas'         : that.canvas, 
             'force'          : that.force, 
             'catContainer'   : that.catContainer,
-            'markerContainer': that.markerContainer,
+            'markerContainer': that.markerContainer
         };
 
         for (var envName in environment)
         {
             animal[envName] = environment[envName];
         };
+    }
+
+    that.iterateCats = function(handler)
+    {
+        that.cats.forEach(handler);
     }
 
 	that.addNewAnimal = function()
@@ -57,10 +62,6 @@ var CatManager = function()
 	        { // mouse creating
                 var newMouse = new Mouse(that);
                 that.mice.push(newMouse);
-
-	            var point = d3.svg.mouse(this), // coords where comp mouse has clicked
-	                newMouseNode = {'x': point[0], 'y': point[1]},
-	                n = forceNodes.push(newMouseNode);
 	        } else
 	        { // cat creating
             	var newCat = new Cat(that); //pass catManager
