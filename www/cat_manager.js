@@ -1,15 +1,15 @@
 var CatManager = function()
 {
 	var that = this;
-	that.canvas = null;
+	that.canvas =  null;
 	that.force = null;
 	that.catContainer = null;
 	that.markerContainer = null;
-
+    that.cats = [];
 
 	that.construct = function(svgElementSelector)
 	{
-		that.canvas = getSVGCanvas(svgElementSelector);
+		that.canvas = SVG.getCanvas(svgElementSelector);
 		that.markerContainer = that.canvas.append('g').attr('id', 'markerGroup');
 		that.catContainer = that.canvas.append('g').attr('id', 'catGroup');
 
@@ -31,33 +31,40 @@ var CatManager = function()
 	    that.canvas.on('click', that.addNewAnimal);
 	}
 
-	that.getCatContainer = function()
+	that.getGlobalSettings = function()
 	{
-		return that.catContainer;
+		return {'canvas': that.canvas, 
+                'force': that.force, 
+                'catContainer': that.catContainer,
+                'markerContainer': that.markerContainer,
+                'cats': that.cats
+                };
 	}
 
-	that.getMarkerContainer = function()
+	that.createNewAnimal = function()
 	{
-		return that.markerContainer;
-	}
+		if (d3.event.target == that.canvas.node())
+		{
+	        if (d3.event.ctrlKey)
+	        { // mouse creating
+	            var point = d3.svg.mouse(this), // coords where comp mouse has clicked
+	                newMouseNode = {'x': point[0], 'y': point[1]},
+	                n = forceNodes.push(newMouseNode);
+	        } else
+	        { // cat creating
+            	var newCat = new Cat(that); //pass catManager
 
-	that.addNewAnimal = function()
-	{
-        if (d3.event.ctrlKey)
-        { // mouse adding
-            var point = d3.svg.mouse(this), // coords where comp mouse has clicked
-                newMouseNode = {'x': point[0], 'y': point[1]},
-                n = forceNodes.push(newMouseNode);
-        } else
-        { // cat adding
-			if (d3.event.target == canvas.node())
-			{
             	catNames.push('shreda');
                 redraw();
-            }
-        }
-        that.force.start();
+	        }
+	        that.force.start();
+    	}
 	}
+
+    that.addNewCat = function(catObj)
+    {
+        that.cats.push(catObj);
+    }
 
 	that.construct.apply(that, arguments);
 }

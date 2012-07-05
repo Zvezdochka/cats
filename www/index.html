@@ -289,9 +289,7 @@ console.info("f",catForceNode);
 		{
             var newCat = new Cat(name, d3.select(this), canvas);
             this.cat = newCat;
-            console.info("this", {'x': this.x.animVal.value, 'y':this.y.animVal.value});
             newCat.forceNode = {'x': this.x.animVal.value, 'y':this.y.animVal.value};
-            console.info("cat init", newCat.forceNode);
             forceNodes.push(newCat.forceNode);
 			cats.push(newCat);
 		})
@@ -337,7 +335,7 @@ console.info("f",catForceNode);
                 .attr("y", function(d) { return d.y; });
         }
         canvas.selectAll("use.mouse, use.cat") // participantes in force relationship
-            .data(forceNodes)           // potential BUG: corrupted match between forceNodes and DOM's elements
+            .data(forceNodes)          // potential BUG: corrupted match between forceNodes and DOM's elements
             .call(updaterNodes)
             .enter()
                 .insert("use")
