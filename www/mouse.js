@@ -3,6 +3,7 @@ var Mouse = function()
     var that = this;
     that.domNode = null;
     that.forceNode = null;
+    that.linkedCat = null;
 
     that.construct = function(manager)
     {
@@ -22,11 +23,14 @@ var Mouse = function()
             that.forceNode = {'x': point[0], 'y': point[1]};
         manager.addForceNode(that.forceNode);
 
-//        that.catBelongTo = null;
-        
         that.updatePosition(); 
         that.domNode.on('dblclick', that.createLink);
 
+    }
+
+    that.getForceNode = function()
+    {
+        return that.forceNode;
     }
 
     that.updatePosition = function()
@@ -39,55 +43,16 @@ var Mouse = function()
     {
        // making link between mouse and cat
         //find cat-actor
-        var cat_found = false;
-//
+        var nearestCat = that.findNearestCat;
+        var nearestMouse = that.findNearestMouse(nearestCat);
         
-        that.cats.forEach(function(cat)
-        {
-            if (cat_found) {return ;}
-            var distanceCat = {'x': cat.pos.x - d.x, 'y': cat.pos.y - d.y};
-            distanceCat = Math.sqrt(distanceCat.x * distanceCat.x + distanceCat.y * distanceCat.y);
-            if (distanceCat <= cat.catAnnihilatorPower)
-            {   //cat found. find mouse to link to
-                cat_found = true;
-                var distanceMin = 100000;
-                mice.forEach(function(mouse)
-                {
-                    if (mouse.catBelongTo == cat)
-                    {
-                        var distanceMouse = ({'x': mouse.forceNode.x - d.x, 'y': mouse.forceNode.y - d.y},
-                                            Math.sqrt(distanceMouse.x * distanceMouse.x + distanceMouse.y * distanceMouse.y));
-                        if (distanceMouse < distanceMin)
-                        {
-                            distanceMin = distanceMouse;
-                        }
-                    }
-                });
-                var target = null;
-                if (distanceMin < distanceCat)
-                {
-                    target =  mouse.forceNode;
-                } else
-                {   // mouse enough close to cat
+        var target = (nearestCat.distance < nearestMouse.distance ? nearestCat.cat : nearestMouse.mouse)
+        link = {'target': target.getForceNode(), 'source': that.forceNode};
+        manager.addForceLink(link);
 
-                    target = cat.forceNode;
-                }
-                link = {'target': target, 'source': d};
-                forceLinks.push(link);
-                force.start();
-                //redrawMiceLinks();
-
-                //save link to cat
-                mice.forEach(function(mouse)
-                {
-                    if (mouse.mouseNode == d3.select(this))
-                    {   //found mouse to link it to cat
-                        mouse.catBelongTo = cat;
-                    }
-                });
-          //      break;
-            }
-        })
+        //save link to cat
+        that.linkedCat = nearestCat.cat;
+        that.linkedCat.addLinkedMouse(that);
     }
 
     that.findNearestCat = function()
@@ -109,14 +74,27 @@ var Mouse = function()
                 }
             }
         });
-        return min.cat;
+        return min;
     }
 
-    that.findNearestMouse = function()
+    that.findNearestMouse = function(cat)
     {
+        var min = {'distance': null, 'mouse': null};
+        cat.iterateLinkedMice(function(mouse)
+        {
+            var thisMouse = that.forceNode;
+            var thatMouse = mouse.getForceNode();
+            var distance = ({'x': thisMouse.x - thatMouse.x, 'y': thisMouse.y - thatMouse.y},
+                            Math.sqrt(distance.x * distance.x + distance.y * distance.y));
 
+            if ((distance < min.distance) || !min.distance)
+            {
+                min.distance = distance;
+                min.mouse = mouse;
+            }
+        });
+        return min;
     }
-
 
     that.construct.apply(that, arguments);
 }

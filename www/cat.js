@@ -12,6 +12,7 @@
 		that.pos = {x: 0, y: 0};
 		that.selectionMarker = null;
         that.annihilatorPower = 1000;
+        that.linkedMice = [];
 
 		that.events =
         {
@@ -121,6 +122,16 @@
         that.getAnnihilatorPower = function()
         {
             return that.annihilatorPower;
+        }
+
+        that.addLinkedMouse = function(mouse)
+        {
+            that.linkedMice.push(mouse);
+        }
+
+        that.iterateLinkedMice = function(handler)
+        {
+            that.linkedMice.forEach(handler);
         }
 
 	    that.construct.apply(that, arguments);

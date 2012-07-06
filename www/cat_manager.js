@@ -2,10 +2,13 @@ var CatManager = function()
 {
 	var that = this;
 	that.canvas =  null;
+    that.catContainer = null;
+    that.markerContainer = null;
+
 	that.force = null;
     that.forceNodes = [];
-	that.catContainer = null;
-	that.markerContainer = null;
+    that.forceLinks = [];
+
     that.cats = [];
     that.mice = [];
 
@@ -49,11 +52,6 @@ var CatManager = function()
         };
     }
 
-    that.iterateCats = function(handler)
-    {
-        that.cats.forEach(handler);
-    }
-
 	that.addNewAnimal = function()
 	{
 		if (d3.event.target == that.canvas.node())
@@ -74,9 +72,20 @@ var CatManager = function()
     	}
 	}
 
+    that.iterateCats = function(handler)
+    {
+        that.cats.forEach(handler);
+    }
+
     that.addForceNode = function(node)
     {
         that.forceNodes.push(node);
+    }
+
+    that.addForceLink = function(link)
+    {
+        that.forceLinks.push(link);
+        that.force.start();
     }
 
 	that.construct.apply(that, arguments);
