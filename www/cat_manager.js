@@ -52,6 +52,11 @@ var CatManager = function()
         };
     }
 
+    that.createSVGPoint = function()
+    {
+        return that.canvas.node().createSVGPoint();
+    }
+
 	that.addNewAnimal = function()
 	{
 		if (d3.event.target == that.canvas.node())
