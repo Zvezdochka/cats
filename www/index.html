@@ -19,6 +19,19 @@
             <embed id="slider_gravity" width="100%" src="slider.svg" type="image/svg+xml" />
         </div>
 	<script>
+    function init()
+    {
+        manager = new CatManager('emb');        
+    }
+    // wait until all the resources are loaded
+    window.addEventListener("load", init, false);
+
+    </script>
+  </body>
+</html>
+
+
+
     var catNames = [];
     var cats = [];
     var mice = [];
