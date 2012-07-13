@@ -19,8 +19,8 @@ var Mouse = function()
                     .call(that.force.drag);
 
         // mouse-force node creating
-        var point = d3.svg.mouse(that.canvas.node()), // coords where comp mouse has clicked
-            that.forceNode = {'x': point[0], 'y': point[1]};
+        var point = d3.svg.mouse(that.canvas.node()); // coords where comp mouse has clicked
+        that.forceNode = {'x': point[0], 'y': point[1]};
         manager.addForceNode(that.forceNode);
 
         that.updatePosition(); 
@@ -43,8 +43,8 @@ var Mouse = function()
     {
        // making link between mouse and cat
         //find cat-actor
-        var nearestCat = that.findNearestCat;
-        var nearestMouse = that.findNearestMouse(nearestCat);
+        var nearestCat = that.findNearestCat();
+        var nearestMouse = that.findNearestMouse(nearestCat.cat);
         
         var target = (nearestCat.distance < nearestMouse.distance ? nearestCat.cat : nearestMouse.mouse)
         link = {'target': target.getForceNode(), 'source': that.forceNode};

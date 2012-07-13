@@ -40,6 +40,7 @@ var CatManager = function()
     {
         var environment = 
         {   
+            'manager'        : that,
             'canvas'         : that.canvas, 
             'force'          : that.force, 
             'catContainer'   : that.catContainer,
@@ -69,9 +70,6 @@ var CatManager = function()
 	        { // cat creating
             	var newCat = new Cat(that); //pass catManager
                 that.cats.push(newCat);
-
-            	catNames.push('shreda');
-                redraw();
 	        }
 	        that.force.start();
     	}
@@ -85,6 +83,7 @@ var CatManager = function()
     that.addForceNode = function(node)
     {
         that.forceNodes.push(node);
+        that.force.start();
     }
 
     that.addForceLink = function(link)

@@ -1,14 +1,14 @@
-var CatSelector = function(selectorGroupId, canvas)
+var CatSelector = function(selectorGroupId)
 {
     var that = this;
-    that.canvas = canvas;
+    that.manager = null;
+    that.canvas = null;
     that.selector = null;
     that.buttons = {rotate: null};
 
     that.construct = function(manager)
     {
-        that.manager = manager; 
-        // getting canvas, force, containers
+        // getting manager, canvas, force, containers
         manager.loadEnvironment(that);
 
         that.selector = that.canvas.select('#' + selectorGroupId);
