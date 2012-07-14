@@ -23,6 +23,8 @@
                 var catMatrix = that.domNode.node().getScreenCTM();
                 centre = centre.matrixTransform(catMatrix);
 
+                // create use (cat)
+//that.catSelector = new SelectorUse(that, '#selector');
                 var selectorBoundBox = that.canvas.select('#selector').node().getBBox();
                 that.selectionMarker = that.markerContainer.append('use');
                 that.selectionMarker.attr('xlink:href', '#selector')
@@ -38,6 +40,7 @@
 
             'catDeselect' : function()
             {
+//destroy selectorUSe
                 that.selectionMarker.remove();
                 that.selectionMarker = null;
                 that.domNode.on('mouseover', that.events.catPreselect);
@@ -131,6 +134,12 @@
         that.getAnnihilatorPower = function()
         {
             return that.annihilatorPower;
+        }
+
+        that.getDomNode = function(args)
+        {
+            args = (args == undefined)? {'native' : true} : args;
+            return (args.native ? that.domNode.node() : that.domNode);
         }
 
         that.addLinkedMouse = function(mouse)

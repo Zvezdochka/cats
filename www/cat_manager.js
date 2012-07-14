@@ -18,6 +18,10 @@ var CatManager = function()
 		that.markerContainer = that.canvas.append('g').attr('id', 'markerGroup');
 		that.catContainer = that.canvas.append('g').attr('id', 'catGroup');
 
+        /*create instance of selector*/
+        that.catSelector = new CatSelector(that, '#selector');
+        that.catSelector = new SelectorUse(that, '#selector');
+
         that.force = d3.layout.force();
 		that.force.nodes(forceNodes)
              .links(forceLinks)

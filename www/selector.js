@@ -1,4 +1,4 @@
-var CatSelector = function(selectorGroupId)
+var CatSelector = function()
 {
     var that = this;
     that.manager = null;
@@ -6,12 +6,12 @@ var CatSelector = function(selectorGroupId)
     that.selector = null;
     that.buttons = {rotate: null};
 
-    that.construct = function(manager)
+    that.construct = function(manager, selectorGroupId)
     {
         // getting manager, canvas, force, containers
         manager.loadEnvironment(that);
 
-        that.selector = that.canvas.select('#' + selectorGroupId);
+        that.selector = that.canvas.select(selectorGroupId);
         that.buttons.rotate = that.selector.select('#buttonRotate');
         that.buttons.rotate.on('mousedown', that.buttonRotatePress);
     }
@@ -27,25 +27,30 @@ var CatSelector = function(selectorGroupId)
         var catObj = mouseDownEvent.target.correspondingUseElement.cat;
 
         var selectorCentre = catObj.getCentre();
-        var catMatrix = catObj.catNode.node().getScreenCTM();
+        var catMatrix = catObj.getDomNode({'native': true}).getScreenCTM();
         selectorCentre = selectorCentre.matrixTransform(catMatrix);
 
-        var startPoint = {
-            x: mouseDownEvent.x-selectorCentre.x,
-            y: selectorCentre.y-mouseDownEvent.y
+        function getPoint(event)
+        {
+            return 
+            {   
+                'x': event.x - selectorCentre.x, 
+                'y': selectorCentre.y - event.y
+            };
         }
+
+        var startPoint = getPoint(mouseDownEvent);
+
         var startAngle = Math.atan(startPoint.y / startPoint.x);
         startAngle = that.radToDeg(startAngle);
         var anglePos = startAngle;
 
-        return function() {
+        return function() 
+        {
             var angleOffset;
             var mouseMoveEvent = d3.event;
 
-            var movePoint = {
-                x: mouseMoveEvent.x-selectorCentre.x,
-                y: selectorCentre.y-mouseMoveEvent.y
-            }
+            var movePoint = getPoint(mouseMoveEvent);
 
             var angle = Math.atan(movePoint.y / movePoint.x);
 
@@ -76,5 +81,5 @@ var CatSelector = function(selectorGroupId)
         that.canvas.on('mousemove', null);
     }
 
-    that.construct();
+    that.construct.apply(that, arguments);
 }
