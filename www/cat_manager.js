@@ -40,7 +40,7 @@ var CatManager = function()
 	    that.canvas.on('click', that.addNewAnimal);
 	}
 
-    that.loadEnvironment = function(animal)
+    that.loadEnvironment = function(environmetable)
     {
         var environment = 
         {   
@@ -53,13 +53,21 @@ var CatManager = function()
 
         for (var envName in environment)
         {
-            animal[envName] = environment[envName];
+            if (envName in environmetable)
+            {
+                environmetable[envName] = environment[envName];                
+            }
         };
     }
 
     that.createSVGPoint = function()
     {
         return that.canvas.node().createSVGPoint();
+    }
+
+    that.createSelectorUse = function(cat)
+    {
+        return new SelectorUse(that, '#selector', cat);
     }
 
 	that.addNewAnimal = function()

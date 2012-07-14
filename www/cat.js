@@ -11,7 +11,7 @@
 		that.lastX = null;
 		that.lastY = null;
 		that.pos = {x: 0, y: 0};
-		that.selectionMarker = null;
+		that.selectorUse = null; // object to control selectorUse
         that.annihilatorPower = 1000;
         that.linkedMice = [];
 
@@ -19,30 +19,15 @@
         {
             'catPreselect' : function()
             {
-                var centre = that.getCentre();
-                var catMatrix = that.domNode.node().getScreenCTM();
-                centre = centre.matrixTransform(catMatrix);
-
-                // create use (cat)
-//that.catSelector = new SelectorUse(that, '#selector');
-                var selectorBoundBox = that.canvas.select('#selector').node().getBBox();
-                that.selectionMarker = that.markerContainer.append('use');
-                that.selectionMarker.attr('xlink:href', '#selector')
-                                    .attr('x', centre.x - selectorBoundBox.width / 2)
-                                    .attr('y', centre.y - selectorBoundBox.height / 2)
-                                    .classed('pre', true)
-                                    .classed('selector', true);
-
-                that.selectionMarker.node().cat = that;       //bind cat & selector
-                that.selectionMarker.on('mouseout', that.events.catDeselect);
+                // create use, send cat & handler for deselection
+                that.selectorUse = that.manager.createSelectorUse(that, that.events.catDeselect);
                 that.domNode.on('mouseover', null);
             },
 
             'catDeselect' : function()
             {
-//destroy selectorUSe
-                that.selectionMarker.remove();
-                that.selectionMarker = null;
+                that.selectorUse.remove();
+                that.selectorUse = null;
                 that.domNode.on('mouseover', that.events.catPreselect);
             },
 
@@ -59,20 +44,22 @@
 
             'moveCat' : function()
             {
-                var offsetX = d3.event.x - that.lastX;
+                var offset = 
+                {
+                    'x': d3.event.x - that.lastX, 
+                    'y': d3.event.y - that.lastY
+                };
                 that.lastX = d3.event.x;
-
-                var offsetY = d3.event.y - that.lastY;
                 that.lastY = d3.event.y;
 
                 that.pos.x += offsetX;
                 that.pos.y += offsetY;
                 that.domNode.attr('x', that.pos.x);
                 that.domNode.attr('y', that.pos.y);
-                if (that.selectionMarker)
+
+                if (that.selectorUse)
                 {
-                    that.selectionMarker.attr('cx', that.selectionMarker.attr('cx')*1 + offsetX);
-                    that.selectionMarker.attr('cy', that.selectionMarker.attr('cy')*1 + offsetY);
+                    that.selectorUse.moveBy(offset);
                 }
             },
 
@@ -112,6 +99,11 @@
             centre.x = that.domNode.attr('x')*1 + catBoundBox.width / 2;
             centre.y = that.domNode.attr('y')*1 + catBoundBox.height / 2;
             return centre;
+        }
+
+        that.getScreenCTM = function()
+        {
+            return that.domNode.node().getScreenCTM();
         }
 
 	    that.rotate = function(angle)
