@@ -11,6 +11,7 @@ var CatManager = function()
 
     that.cats = [];
     that.mice = [];
+    that.links = [];
 
 	that.construct = function(svgElementSelector)
 	{
@@ -31,11 +32,7 @@ var CatManager = function()
              .size([500, 250])
              .start();
 
-        that.force.on('tick', function()
-        {
-             redrawMice();
-             redrawMiceLinks();
-        });
+        that.force.on('tick', that.updateAnimalPositions);
 
 	    that.canvas.on('click', that.addNewAnimal);
 	}
@@ -87,6 +84,17 @@ var CatManager = function()
     	}
 	}
 
+    that.updateAnimalPositions = function()
+    {
+        var updater = function(animal)
+        {
+            animal.updatePosition();
+        }
+        that.cats.forEach(updater);
+        that.mice.forEach(updater);
+        that.links.forEach(updater);
+    }
+
     that.iterateCats = function(handler)
     {
         that.cats.forEach(handler);
@@ -98,9 +106,12 @@ var CatManager = function()
         that.force.start();
     }
 
-    that.addForceLink = function(link)
+    that.createMouseLink = function(target, source)
     {
-        that.forceLinks.push(link);
+        var link = new MouseLink(that, target, source);
+        that.links.push(link);
+
+        that.forceLinks.push(link.getForceLink());
         that.force.start();
     }
 

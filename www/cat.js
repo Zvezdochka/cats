@@ -123,6 +123,12 @@
             that.domNode.attr('transform', 'matrix(' + m + ')');
         }
 
+        that.updatePosition = function()
+        {
+            that.domNode.attr('x', that.forceNode.x)
+                        .attr('y', that.forceNode.y);
+        }
+
         that.getAnnihilatorPower = function()
         {
             return that.annihilatorPower;

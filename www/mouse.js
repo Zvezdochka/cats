@@ -7,7 +7,6 @@ var Mouse = function()
 
     that.construct = function(manager)
     {
-        that.manager = manager; 
         // getting canvas, force, containers, cats
         manager.loadEnvironment(that);
 
@@ -47,6 +46,7 @@ var Mouse = function()
         var nearestMouse = that.findNearestMouse(nearestCat.cat);
         
         var target = (nearestCat.distance < nearestMouse.distance ? nearestCat.cat : nearestMouse.mouse)
+        that.manager.createMouseLink(target, that);
         link = {'target': target.getForceNode(), 'source': that.forceNode};
         manager.addForceLink(link);
 
