@@ -6,7 +6,7 @@ SVG =
         var subDoc = this.getSubDocument(obj);
         var svg = d3.select(subDoc).select('svg');
         return svg;
-    }
+    },
 
     'getSubDocument': function(embedding_element)
     {

@@ -30,12 +30,11 @@ var CatSelector = function()
         var catMatrix = catObj.getDomNode({'native': true}).getScreenCTM();
         selectorCentre = selectorCentre.matrixTransform(catMatrix);
 
-        function getPoint(event)
+        function getPoint(ourevent)
         {
-            return 
-            {   
-                'x': event.x - selectorCentre.x, 
-                'y': selectorCentre.y - event.y
+            return {   
+                'x': ourevent.x - selectorCentre.x,
+                'y': selectorCentre.y - ourevent.y
             };
         }
 

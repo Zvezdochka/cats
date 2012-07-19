@@ -13,7 +13,7 @@ var MouseLink = function()
         that.source = source;
 
         that.domNode = that.canvas.insert('line');
-        that.domNode.attr('class', 'mouselink');
+        that.domNode.attr('class', 'mouseLink');
         that.updatePosition();
     }
 

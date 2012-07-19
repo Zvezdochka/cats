@@ -1,6 +1,8 @@
 var Mouse = function()
 {
     var that = this;
+    that.manager = null;
+    that.canvas = null;
     that.domNode = null;
     that.forceNode = null;
     that.linkedCat = null;
@@ -15,7 +17,7 @@ var Mouse = function()
         that.domNode.attr('xlink:href', '#chromed_mouse')
                     .attr('class', 'mouse')
                     .attr('width', 100)
-                    .call(that.force.drag);
+                    .call(manager.force.drag);
 
         // mouse-force node creating
         var point = d3.svg.mouse(that.canvas.node()); // coords where comp mouse has clicked
@@ -44,11 +46,18 @@ var Mouse = function()
         //find cat-actor
         var nearestCat = that.findNearestCat();
         var nearestMouse = that.findNearestMouse(nearestCat.cat);
-        
-        var target = (nearestCat.distance < nearestMouse.distance ? nearestCat.cat : nearestMouse.mouse)
+        if (!nearestMouse.mouse) 
+        {
+            var target = nearestCat.cat;
+        } else if (!nearestCat.cat)
+        { 
+            return ;
+        } else 
+        {
+            target = (nearestCat.distance < nearestMouse.distance ? nearestCat.cat : nearestMouse.mouse);
+        }
+
         that.manager.createMouseLink(target, that);
-        link = {'target': target.getForceNode(), 'source': that.forceNode};
-        manager.addForceLink(link);
 
         //save link to cat
         that.linkedCat = nearestCat.cat;
@@ -62,8 +71,8 @@ var Mouse = function()
         {
             var cat = catObject.getForceNode();
             var mouse = that.forceNode;
-            var distance = ({'x': cat.x - mouse.x, 'y': cat.y - mouse.y},
-                            Math.sqrt(distance.x * distance.x + distance.y * distance.y));
+            var distance = {'x': cat.x - mouse.x, 'y': cat.y - mouse.y};
+            distance = Math.sqrt(distance.x * distance.x + distance.y * distance.y);
 
             if (distance <= catObject.getAnnihilatorPower())
             {
@@ -84,8 +93,8 @@ var Mouse = function()
         {
             var thisMouse = that.forceNode;
             var thatMouse = mouse.getForceNode();
-            var distance = ({'x': thisMouse.x - thatMouse.x, 'y': thisMouse.y - thatMouse.y},
-                            Math.sqrt(distance.x * distance.x + distance.y * distance.y));
+            var distance = {'x': thisMouse.x - thatMouse.x, 'y': thisMouse.y - thatMouse.y};
+            distance = Math.sqrt(distance.x * distance.x + distance.y * distance.y);
 
             if ((distance < min.distance) || !min.distance)
             {

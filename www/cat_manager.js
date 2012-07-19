@@ -21,11 +21,10 @@ var CatManager = function()
 
         /*create instance of selector*/
         that.catSelector = new CatSelector(that, '#selector');
-        that.catSelector = new SelectorUse(that, '#selector');
 
         that.force = d3.layout.force();
-		that.force.nodes(forceNodes)
-             .links(forceLinks)
+		that.force.nodes(that.forceNodes)
+             .links(that.forceLinks)
              //.gravity(0)
              .charge(-1000)
              //.linkDistance(0)
@@ -62,9 +61,9 @@ var CatManager = function()
         return that.canvas.node().createSVGPoint();
     }
 
-    that.createSelectorUse = function(cat)
+    that.createSelectorUse = function(cat, onDeselect)
     {
-        return new SelectorUse(that, '#selector', cat);
+        return new SelectorUse(that, '#selector', cat, onDeselect);
     }
 
 	that.addNewAnimal = function()

@@ -52,8 +52,8 @@
                 that.lastX = d3.event.x;
                 that.lastY = d3.event.y;
 
-                that.pos.x += offsetX;
-                that.pos.y += offsetY;
+                that.pos.x += offset.x;
+                that.pos.y += offset.y;
                 that.domNode.attr('x', that.pos.x);
                 that.domNode.attr('y', that.pos.y);
 
@@ -82,19 +82,26 @@
                         .attr('x', point[0])
                         .attr('y', point[1])
                         .style('opacity','0')
-                        .classed('cat', true);
+                        .classed('cat', true)
+                        .transition()
+                            .style('opacity', 1)
+                            .duration(1000);
 
             that.domNode.on('mousedown', that.events.catchCat);
             that.domNode.on('mouseover', that.events.catPreselect);
 
             // creating cat in force nodes
-            that.forceNode = {'x': that.domNode.x.animVal.value, 'y': that.domNode.y.animVal.value};
+            that.forceNode = 
+            {
+                'x': that.domNode.node().x.animVal.value, 
+                'y': that.domNode.node().y.animVal.value
+            };
             that.manager.addForceNode(that.forceNode);
 	    }
 
         that.getCentre = function()
         {
-            var catBoundBox = that.catNode.node().getBBox();
+            var catBoundBox = that.domNode.node().getBBox();
             var centre = that.manager.createSVGPoint();
             centre.x = that.domNode.attr('x')*1 + catBoundBox.width / 2;
             centre.y = that.domNode.attr('y')*1 + catBoundBox.height / 2;
@@ -112,12 +119,9 @@
             var matrixTransformGroupToCat = domCat.getTransformToElement(domCat.parentNode);
             var catCentre = that.getCentre();
             
-            matrixTransformGroupToCat = 
-            (
-                matrixTransformGroupToCat.translate(catCentre.x, catCentre.y),
-                matrixTransformGroupToCat.rotate(angle),
-                matrixTransformGroupToCat.translate(-catCentre.x, -catCentre.y)
-            );
+            newMatrix = matrixTransformGroupToCat.translate(catCentre.x, catCentre.y);
+            newMatrix = newMatrix.rotate(angle);
+            matrixTransformGroupToCat = newMatrix.translate(-catCentre.x, -catCentre.y);
 
             var m = (m = matrixTransformGroupToCat, [m.a, m.b, m.c, m.d, m.e, m.f].join(' '));
             that.domNode.attr('transform', 'matrix(' + m + ')');
@@ -138,6 +142,11 @@
         {
             args = (args == undefined)? {'native' : true} : args;
             return (args.native ? that.domNode.node() : that.domNode);
+        }
+
+        that.getForceNode = function()
+        {
+            return that.forceNode;
         }
 
         that.addLinkedMouse = function(mouse)
