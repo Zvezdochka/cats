@@ -66,7 +66,13 @@
             'releaseCat' : function()
             {
                 that.canvas.on('mousemove', null);
+            },
+
+            'tailgrabber' : function()
+            {
+                console.info('sdfsd');
             }
+
         }
 
 	    that.construct = function(manager)
@@ -86,6 +92,7 @@
                         .transition()
                             .style('opacity', 1)
                             .duration(1000);
+            that.domNode.node().catModel = that;
 
             that.domNode.on('mousedown', that.events.catchCat);
             that.domNode.on('mouseover', that.events.catPreselect);

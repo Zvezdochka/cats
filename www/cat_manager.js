@@ -22,6 +22,9 @@ var CatManager = function()
         /*create instance of selector*/
         that.catSelector = new CatSelector(that, '#selector');
 
+        /*create instance of cateventsProxy*/
+        that.catSelector = new CatEventsProxy(that);
+
         /*create instance of socket*/
         that.socket = new Socket(that);
 
