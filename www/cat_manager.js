@@ -22,6 +22,9 @@ var CatManager = function()
         /*create instance of selector*/
         that.catSelector = new CatSelector(that, '#selector');
 
+        /*create instance of socket*/
+        that.socket = new Socket(that);
+
         that.force = d3.layout.force();
 		that.force.nodes(that.forceNodes)
              .links(that.forceLinks)
@@ -102,7 +105,10 @@ var CatManager = function()
     that.addForceNode = function(node)
     {
         that.forceNodes.push(node);
-        that.force.start();
+        if (that.force)
+        {
+            that.force.start();
+        }
     }
 
     that.createMouseLink = function(target, source)
