@@ -114,7 +114,7 @@ var CatManager = function()
         }
     }
 
-    that.createMouseLink = function(target, source)
+    that.createForceLink = function(target, source)
     {
         var link = new MouseLink(that, target, source);
         that.links.push(link);
@@ -152,8 +152,10 @@ var CatManager = function()
     {
         that.connectingCat.events.fixTail(socket);
         that.socket.stopListeningEvents();
-        that.connectingCat = null;
         that.canvas.on('mouseup', null);
+
+        that.createForceLink(socket, that.connectingCat);
+        that.connectingCat = null;
     }
 
 	that.construct.apply(that, arguments);

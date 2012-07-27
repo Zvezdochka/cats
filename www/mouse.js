@@ -57,7 +57,7 @@ var Mouse = function()
             target = (nearestCat.distance < nearestMouse.distance ? nearestCat.cat : nearestMouse.mouse);
         }
 
-        that.manager.createMouseLink(target, that);
+        that.manager.createForceLink(target, that);
 
         //save link to cat
         that.linkedCat = nearestCat.cat;

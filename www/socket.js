@@ -4,7 +4,7 @@ var Socket = function()
     that.manager = null;
     that.canvas = null;
     that.domNode = null;
-    
+    that.forceNode = null;
 
     that.construct = function(manager)
     {
@@ -14,16 +14,16 @@ var Socket = function()
         that.domNode = that.canvas.append('use')
         that.domNode.attr('x', 500)
                     .attr('y', 500)
-                    .attr('xlink:href', '#shreda');
+                    .attr('xlink:href', '#socket');
 
         //making socket force node
-        var forceNode = 
+        that.forceNode = 
         {
             'x': that.domNode.attr('x'), 
-            'y': that.domNode.attr('y'), 
-            'fixed': true
+            'y': that.domNode.attr('y'),
+            'fixed' : true
         };
-        that.manager.addForceNode(forceNode);
+        that.manager.addForceNode(that.forceNode);
     }
 
     that.getCentre = function()
@@ -65,6 +65,13 @@ var Socket = function()
     that.onSelect = function()
     {
         that.manager.onSocketSelected(that);   
+        return false;
+    }
+
+
+    that.getForceNode = function()
+    {
+        return that.forceNode;
     }
 
     that.construct.apply(that, arguments);
