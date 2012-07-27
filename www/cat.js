@@ -14,6 +14,7 @@
 		that.selectorUse = null; // object to control selectorUse
         that.annihilatorPower = 1000;
         that.linkedMice = [];
+        that.connectedSocket = null;
 
 		that.events =
         {
@@ -68,11 +69,52 @@
                 that.canvas.on('mousemove', null);
             },
 
-            'tailgrabber' : function()
+            'tailgrabber' : function(mouseDownEvent)
             {
-                console.info('sdfsd');
-            }
+                if  (that.connectedSocket) {return false;};
+                var clickPoint = {'x': mouseDownEvent.x, 'y': mouseDownEvent.y};
+                that.tail = that.canvas.append('line');
+                that.tail.attr('x1', clickPoint.x)
+                         .attr('y1', clickPoint.y)
+                         .attr('x2', clickPoint.x)
+                         .attr('y2', clickPoint.y)
+                         .style('stroke', '#000');
+                that.canvas.on('mousemove', that.events.tailpuller(that.tail));
+                return false;
+            },
 
+            'tailpuller' : function(line)
+            {
+                that.manager.onCatConnectionStart(that); // say manager that cat is trying to connect
+
+                return function()
+                {
+                    line.attr('x2', d3.event.x)
+                        .attr('y2', d3.event.y);
+                }
+            },
+
+            'fixTail' : function(socket)
+            {
+                var socketCentre = socket.getCentre();
+                that.tail.attr('x2', socketCentre.x)
+                         .attr('y2', socketCentre.y);
+                that.canvas.on('mousemove', null);
+                that.connectedSocket = socket;
+            },
+
+            'unfixTail' : function()
+            {
+                that.canvas.on('mousemove', that.events.tailpuller(that.tail));
+                that.connectedSocket = null;
+            },
+
+            'releaseTail' : function()
+            {
+                that.tail.remove();
+                that.tail = null;
+                that.canvas.on('mousemove', null);  
+            }
         }
 
 	    that.construct = function(manager)
@@ -92,9 +134,8 @@
                         .transition()
                             .style('opacity', 1)
                             .duration(1000);
-            that.domNode.node().catModel = that;
+            that.domNode.node().cat = that;
 
-            that.domNode.on('mousedown', that.events.catchCat);
             that.domNode.on('mouseover', that.events.catPreselect);
 
             // creating cat in force nodes

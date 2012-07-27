@@ -23,7 +23,7 @@ var CatManager = function()
         that.catSelector = new CatSelector(that, '#selector');
 
         /*create instance of cateventsProxy*/
-        that.catSelector = new CatEventsProxy(that);
+        that.catEventsProxy = new CatEventsProxy(that);
 
         /*create instance of socket*/
         that.socket = new Socket(that);
@@ -121,6 +121,39 @@ var CatManager = function()
 
         that.forceLinks.push(link.getForceLink());
         that.force.start();
+    }
+
+    that.onCatConnectionStart = function(cat)
+    {
+        that.connectingCat = cat;
+        that.socket.startListeningEvents(); // say socket to start listening mouseover|mouseout events
+        that.canvas.on('mouseup', that.onCatConnectionCancel);
+    }
+
+    that.onCatConnectionCancel = function()
+    {
+        that.connectingCat.events.releaseTail();
+        that.connectingCat = null;
+        that.socket.stopListeningEvents();
+        that.canvas.on('mouseup', null);
+    }
+
+    that.onSocketHighlighted = function(socket)
+    {
+        that.connectingCat.events.fixTail(socket);
+    }
+
+    that.onSocketLowlighted = function(socket)
+    {
+        that.connectingCat.events.unfixTail(socket);
+    }
+
+    that.onSocketSelected = function(socket)
+    {
+        that.connectingCat.events.fixTail(socket);
+        that.socket.stopListeningEvents();
+        that.connectingCat = null;
+        that.canvas.on('mouseup', null);
     }
 
 	that.construct.apply(that, arguments);
